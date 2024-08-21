@@ -1,15 +1,12 @@
 package com.xayah.feature.main.packages.backup.list
 
 import android.content.Context
+import android.content.pm.UserInfo
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavHostController
 import com.xayah.core.data.repository.PackageRepository
 import com.xayah.core.datastore.readBackupFilterFlagIndex
-import com.xayah.core.datastore.readBackupUserIdIndex
-import com.xayah.core.datastore.readUserIdList
 import com.xayah.core.datastore.saveBackupFilterFlagIndex
-import com.xayah.core.datastore.saveBackupUserIdIndex
-import com.xayah.core.datastore.saveUserIdList
 import com.xayah.core.model.DataState
 import com.xayah.core.model.OpType
 import com.xayah.core.model.SortType
@@ -22,7 +19,6 @@ import com.xayah.core.ui.viewmodel.IndexUiEffect
 import com.xayah.core.ui.viewmodel.UiIntent
 import com.xayah.core.ui.viewmodel.UiState
 import com.xayah.core.util.encodeURL
-import com.xayah.core.util.module.combine
 import com.xayah.core.util.navigateSingle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
@@ -45,8 +42,8 @@ data class IndexUiState(
 sealed class IndexUiIntent : UiIntent {
     data object OnRefresh : IndexUiIntent()
     data object OnFastRefresh : IndexUiIntent()
-    data object GetUserIds : IndexUiIntent()
-    data class SetUserIdIndexList(val list: List<Int>) : IndexUiIntent()
+    data class SetUserId(val userId: Int) : IndexUiIntent()
+    data object GetUsers : IndexUiIntent()
     data class FilterByFlag(val index: Int) : IndexUiIntent()
     data class Sort(val index: Int, val type: SortType) : IndexUiIntent()
     data class FilterByKey(val key: String) : IndexUiIntent()
@@ -69,7 +66,7 @@ class IndexViewModel @Inject constructor(
         isRefreshing = false,
         selectAll = false,
         uuid = UUID.randomUUID(),
-        isLoading = false
+        isLoading = false,
     )
 ) {
     init {
@@ -96,12 +93,12 @@ class IndexViewModel @Inject constructor(
                 emitState(state.copy(isLoading = false))
             }
 
-            is IndexUiIntent.GetUserIds -> {
-                context.saveUserIdList(rootService.getUsers().map { it.id })
+            is IndexUiIntent.SetUserId -> {
+                _userIdIndex.value = intent.userId
             }
 
-            is IndexUiIntent.SetUserIdIndexList -> {
-                context.saveBackupUserIdIndex(intent.list)
+            is IndexUiIntent.GetUsers -> {
+                _userList.value = rootService.getUsers()
             }
 
             is IndexUiIntent.FilterByFlag -> {
@@ -131,7 +128,7 @@ class IndexViewModel @Inject constructor(
             }
 
             is IndexUiIntent.SelectAll -> {
-                packageRepo.upsert(packagesState.value.onEach { it.extraInfo.activated = intent.selected })
+                packageRepo.upsert(displayPackagesState.value.onEach { it.extraInfo.activated = intent.selected })
             }
 
             is IndexUiIntent.ToPageDetail -> {
@@ -170,27 +167,48 @@ class IndexViewModel @Inject constructor(
     private val _packages: Flow<List<PackageEntity>> = packageRepo.queryPackagesFlow(opType = OpType.BACKUP, existed = true, blocked = false).flowOnIO()
     private var _keyState: MutableStateFlow<String> = MutableStateFlow("")
     private var _flagIndex: Flow<Int> = context.readBackupFilterFlagIndex().flowOnIO()
-    private var _userIdList: Flow<List<Int>> = context.readUserIdList().flowOnIO()
-    private var _userIdIndexList: Flow<List<Int>> = context.readBackupUserIdIndex().flowOnIO()
+    private var _userIdIndex: MutableStateFlow<Int> = MutableStateFlow(0)
+    private var _userList: MutableStateFlow<List<UserInfo>> = MutableStateFlow(listOf())
     private var _sortIndexState: MutableStateFlow<Int> = MutableStateFlow(0)
     private var _sortTypeState: MutableStateFlow<SortType> = MutableStateFlow(SortType.ASCENDING)
     private val _packagesState: Flow<List<PackageEntity>> =
-        combine(_packages, _keyState, _flagIndex, _sortIndexState, _sortTypeState, _userIdIndexList, _userIdList) { packages, key, flagIndex, sortIndex, sortType, userIdIndexList, userIdList ->
-            packages.filter(packageRepo.getKeyPredicateNew(key = key))
+        combine(
+            _packages,
+            _keyState,
+            _flagIndex,
+            _sortIndexState,
+            _sortTypeState,
+        ) { packages, key, flagIndex, sortIndex, sortType ->
+            packages.asSequence()
+                .filter(packageRepo.getKeyPredicateNew(key = key))
                 .filter(packageRepo.getFlagPredicateNew(index = flagIndex))
-                .filter(packageRepo.getUserIdPredicateNew(indexList = userIdIndexList, userIdList = userIdList))
                 .sortedWith(packageRepo.getSortComparatorNew(sortIndex = sortIndex, sortType = sortType))
-                .sortedByDescending { it.extraInfo.activated }
+                .sortedByDescending { it.extraInfo.activated }.toList()
+        }.flowOnIO()
+    private val _displayPackagesState: Flow<List<PackageEntity>> =
+        combine(_packagesState, _userIdIndex, _userList) { packages, userIdIndex, userIdList ->
+            packages.filter(packageRepo.getUserIdPredicateNew(userId = userIdList.getOrNull(userIdIndex)?.id))
         }.flowOnIO()
     private val _srcPackagesEmptyState: Flow<Boolean> = _packages.map { packages -> packages.isEmpty() }.flowOnIO()
     private val _packagesSelectedState: Flow<Int> = _packagesState.map { packages -> packages.count { it.extraInfo.activated } }.flowOnIO()
+    private val _displayPackagesSelectedState: Flow<Map<Int, Int?>> =
+        combine(_packagesState, _userIdIndex, _userList) { packages, userIdIndex, userIdList ->
+            val map = mutableMapOf<Int, Int?>()
+            userIdList.forEach { user ->
+                val count = packages.count { it.extraInfo.activated && it.indexInfo.userId == user.id }
+                map[user.id] = if (count == 0) null else count
+            }
+            map
+        }.flowOnIO()
 
     val packagesState: StateFlow<List<PackageEntity>> = _packagesState.stateInScope(listOf())
+    val displayPackagesState: StateFlow<List<PackageEntity>> = _displayPackagesState.stateInScope(listOf())
     val packagesSelectedState: StateFlow<Int> = _packagesSelectedState.stateInScope(0)
+    val displayPackagesSelectedState: StateFlow<Map<Int, Int?>> = _displayPackagesSelectedState.stateInScope(mapOf())
     val refreshState: StateFlow<RefreshState> = _refreshState.asStateFlow()
     val flagIndexState: StateFlow<Int> = _flagIndex.stateInScope(1)
-    val userIdListState: StateFlow<List<Int>> = _userIdList.stateInScope(listOf(0))
-    val userIdIndexListState: StateFlow<List<Int>> = _userIdIndexList.stateInScope(listOf(0))
+    val userListState: StateFlow<List<UserInfo>> = _userList.stateInScope(listOf())
+    val userIdIndexState: StateFlow<Int> = _userIdIndex.stateInScope(0)
     val sortIndexState: StateFlow<Int> = _sortIndexState.stateInScope(0)
     val sortTypeState: StateFlow<SortType> = _sortTypeState.stateInScope(SortType.ASCENDING)
     val srcPackagesEmptyState: StateFlow<Boolean> = _srcPackagesEmptyState.stateInScope(true)

@@ -10,7 +10,6 @@ import com.xayah.core.data.R
 import com.xayah.core.data.util.srcDir
 import com.xayah.core.database.dao.PackageDao
 import com.xayah.core.datastore.readBackupFilterFlagIndex
-import com.xayah.core.datastore.readBackupUserIdIndex
 import com.xayah.core.datastore.readCheckKeystore
 import com.xayah.core.datastore.readCompressionType
 import com.xayah.core.datastore.readCustomSUFile
@@ -171,8 +170,11 @@ class PackageRepository @Inject constructor(
         runCatching { p.userId in indexList.map { userIdList[it] } }.getOrDefault(p.userId == 0)
     }
 
+    fun getUserIdPredicateNew(userId: Int?): (PackageEntity) -> Boolean = { p ->
+        runCatching { p.userId == userId }.getOrDefault(false)
+    }
+
     suspend fun filterBackup(packages: List<PackageEntity>) = packages.filter(getFlagPredicateNew(index = context.readBackupFilterFlagIndex().first()))
-        .filter(getUserIdPredicateNew(indexList = context.readBackupUserIdIndex().first(), userIdList = rootService.getUsers().map { it.id }))
 
     suspend fun filterRestore(packages: List<PackageEntity>) = packages.filter(getFlagPredicateNew(index = context.readRestoreFilterFlagIndex().first()))
         .filter(getUserIdPredicateNew(indexList = context.readRestoreUserIdIndex().first(), userIdList = queryUserIds(OpType.RESTORE)))

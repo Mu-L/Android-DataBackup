@@ -49,7 +49,7 @@ fun PackageIconImage(icon: ImageVector? = null, packageName: String, inCircleSha
     val scope = rememberCoroutineScope()
     var iconForeground by remember(packageName, icon) { mutableStateOf<Drawable?>(null) }
     var iconBackground by remember(packageName, icon) { mutableStateOf<Drawable?>(null) }
-    val sizeForeground by remember(size) { mutableStateOf(size.div(sqrt(2F))) }
+    val sizeForeground by remember(size, inCircleShape) { mutableStateOf(if (inCircleShape) size.div(sqrt(2.2F)) else size) }
     LaunchedEffect(packageName, icon) {
         if (icon == null) {
             // Read icon from cached internal dir.
