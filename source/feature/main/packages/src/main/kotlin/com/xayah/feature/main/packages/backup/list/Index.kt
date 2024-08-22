@@ -27,9 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.Checklist
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -63,7 +61,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xayah.core.datastore.readLoadSystemApps
 import com.xayah.core.model.DataType
-import com.xayah.core.ui.component.ActionChip
 import com.xayah.core.ui.component.Divider
 import com.xayah.core.ui.component.IconButton
 import com.xayah.core.ui.component.InnerBottomSpacer
@@ -81,8 +78,10 @@ import com.xayah.core.ui.component.paddingVertical
 import com.xayah.core.ui.material3.pullrefresh.PullRefreshIndicator
 import com.xayah.core.ui.material3.pullrefresh.pullRefresh
 import com.xayah.core.ui.material3.pullrefresh.rememberPullRefreshState
+import com.xayah.core.ui.route.MainRoutes
 import com.xayah.core.ui.token.SizeTokens
 import com.xayah.core.ui.util.LocalNavController
+import com.xayah.core.util.navigateSingle
 import com.xayah.feature.main.packages.DotLottieView
 import com.xayah.feature.main.packages.ListScaffold
 import com.xayah.feature.main.packages.R
@@ -139,7 +138,7 @@ fun PagePackagesBackupList() {
             var obbSelected by remember { mutableStateOf(true) }
             var mediaSelected by remember { mutableStateOf(true) }
 
-            TitleLargeText(modifier = Modifier.paddingHorizontal(SizeTokens.Level24), text = "Create backup")
+            TitleLargeText(modifier = Modifier.paddingHorizontal(SizeTokens.Level24), text = stringResource(id = R.string.batch_select))
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,36 +192,6 @@ fun PagePackagesBackupList() {
                 }
             }
 
-            TitleLargeText(modifier = Modifier.paddingHorizontal(SizeTokens.Level24), text = "Backup to")
-
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .paddingHorizontal(SizeTokens.Level24)
-                    .paddingVertical(SizeTokens.Level16),
-                horizontalArrangement = Arrangement.spacedBy(SizeTokens.Level8),
-                verticalArrangement = Arrangement.spacedBy(SizeTokens.Level8),
-                maxItemsInEachRow = 2
-            ) {
-                ActionChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Rounded.PhoneAndroid,
-                    selected = true,
-                    title = stringResource(id = R.string.local)
-                ) {
-
-                }
-                ActionChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Rounded.Cloud,
-                    selected = false,
-                    title = stringResource(id = R.string.local),
-                    subtitle = "Test"
-                ) {
-
-                }
-            }
-
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -271,11 +240,10 @@ fun PagePackagesBackupList() {
                 ExtendedFloatingActionButton(
                     modifier = Modifier.onSizeChanged { fabHeight = it.height * 1.5f },
                     onClick = {
-                        showBottomSheet = true
-//                        navController.navigateSingle(MainRoutes.PackagesBackupProcessingGraph.route)
+                        navController.navigateSingle(MainRoutes.PackagesBackupProcessingGraph.route)
                     },
-                    icon = { Icon(Icons.Rounded.Add, null) },
-                    text = { Text(text = "Create backup") },
+                    icon = { Icon(Icons.Rounded.ChevronRight, null) },
+                    text = { Text(text = stringResource(id = R.string._continue)) },
                 )
             }
         }
@@ -433,6 +401,9 @@ fun PagePackagesBackupList() {
                                 PackageItem(
                                     item = item,
                                     onCheckedChange = { viewModel.emitIntentOnIO(IndexUiIntent.Select(item)) },
+                                    onItemsIconClick = { flag ->
+                                        viewModel.emitIntentOnIO(IndexUiIntent.ChangeFlag(flag, item))
+                                    },
                                     onClick = {
                                         viewModel.emitIntentOnIO(IndexUiIntent.ToPageDetail(navController, item))
                                     }

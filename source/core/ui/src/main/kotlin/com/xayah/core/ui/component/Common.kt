@@ -1,6 +1,7 @@
 package com.xayah.core.ui.component
 
 import android.graphics.drawable.Drawable
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,7 +30,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
@@ -53,6 +60,7 @@ import com.xayah.core.ui.R
 import com.xayah.core.ui.theme.ThemedColorSchemeKeyTokens
 import com.xayah.core.ui.theme.value
 import com.xayah.core.ui.theme.withState
+import com.xayah.core.ui.token.AnimationTokens
 import com.xayah.core.ui.token.SizeTokens
 import com.xayah.core.util.PathUtil
 import com.xayah.core.util.command.BaseUtil
@@ -235,6 +243,7 @@ fun PackageItem(
     item: PackageEntity,
     checked: Boolean? = null,
     onCheckedChange: ((Boolean) -> Unit)?,
+    onItemsIconClick: ((Int) -> Unit)? = null,
     onClick: () -> Unit
 ) {
     com.xayah.core.ui.material3.Surface(onClick = onClick) {
@@ -258,6 +267,43 @@ fun PackageItem(
                         color = ThemedColorSchemeKeyTokens.Outline.value,
                         maxLines = 1,
                     )
+                }
+
+                AnimatedContent(targetState = item.selectionFlag, label = AnimationTokens.AnimatedContentLabel) { flag ->
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(
+                                    text = when (flag) {
+                                        PackageEntity.FLAG_NONE -> stringResource(id = R.string.no_item_selected)
+                                        PackageEntity.FLAG_APK -> stringResource(id = R.string.apk_selected)
+                                        PackageEntity.FLAG_DATA -> stringResource(id = R.string.data_selected)
+                                        PackageEntity.FLAG_ALL -> stringResource(id = R.string.all_selected)
+                                        else -> stringResource(id = R.string.custom_selected)
+                                    },
+                                )
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        IconButton(
+                            icon = when (flag) {
+                                PackageEntity.FLAG_NONE -> ImageVector.vectorResource(id = R.drawable.ic_rounded_cancel_circle)
+                                PackageEntity.FLAG_APK -> ImageVector.vectorResource(id = R.drawable.ic_rounded_android_circle)
+                                PackageEntity.FLAG_DATA -> ImageVector.vectorResource(id = R.drawable.ic_rounded_database_circle)
+                                PackageEntity.FLAG_ALL -> ImageVector.vectorResource(id = R.drawable.ic_rounded_check_circle)
+                                else -> ImageVector.vectorResource(id = R.drawable.ic_rounded_package_2_circle)
+                            },
+                            tint = when (flag) {
+                                PackageEntity.FLAG_NONE -> ThemedColorSchemeKeyTokens.Error.value
+                                PackageEntity.FLAG_ALL -> ThemedColorSchemeKeyTokens.GreenPrimary.value
+                                else -> ThemedColorSchemeKeyTokens.Primary.value
+                            },
+                        ) {
+                            onItemsIconClick?.invoke(flag)
+                        }
+                    }
                 }
 
                 VerticalDivider(

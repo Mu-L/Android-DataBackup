@@ -123,6 +123,25 @@ data class PackageEntity(
     val mediaSelected: Boolean
         get() = dataStates.mediaState == DataState.Selected
 
+    companion object {
+        const val FLAG_NONE = 0
+        const val FLAG_APK = 1     // 000001
+        const val FLAG_DATA = 62   // 111110
+        const val FLAG_ALL = 63    // 111111
+    }
+
+    val selectionFlag: Int
+        get() {
+            var flag = 0
+            if (apkSelected) flag = flag or 1
+            if (userSelected) flag = flag or 2
+            if (userDeSelected) flag = flag or 4
+            if (dataSelected) flag = flag or 8
+            if (obbSelected) flag = flag or 16
+            if (mediaSelected) flag = flag or 32
+            return flag
+        }
+
     val dataSelectedCount: Int
         get() = run {
             var count = 0

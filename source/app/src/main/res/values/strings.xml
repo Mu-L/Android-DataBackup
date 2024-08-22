@@ -354,4 +354,9 @@
     <string name="download">Download</string>
     <string name="changelog">Changelog</string>
     <string name="args_update_from">You can update from version %1$s to version %2$s</string>
+    <string name="no_item_selected">No item selected</string>
+    <string name="apk_selected">APK selected</string>
+    <string name="data_selected">Data selected</string>
+    <string name="all_selected">All items selected</string>
+    <string name="custom_selected">Custom items selected</string>
 </resources>

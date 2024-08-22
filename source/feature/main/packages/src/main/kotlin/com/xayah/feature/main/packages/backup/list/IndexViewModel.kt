@@ -20,6 +20,10 @@ import com.xayah.core.ui.viewmodel.UiIntent
 import com.xayah.core.ui.viewmodel.UiState
 import com.xayah.core.util.encodeURL
 import com.xayah.core.util.navigateSingle
+import com.xayah.feature.main.packages.selectAll
+import com.xayah.feature.main.packages.selectApkOnly
+import com.xayah.feature.main.packages.selectDataOnly
+import com.xayah.feature.main.packages.selectNone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -50,6 +54,7 @@ sealed class IndexUiIntent : UiIntent {
     data object ClearKey : IndexUiIntent()
     data class Select(val entity: PackageEntity) : IndexUiIntent()
     data class SelectAll(val selected: Boolean) : IndexUiIntent()
+    data class ChangeFlag(val flag: Int, val entity: PackageEntity) : IndexUiIntent()
     data object BlockSelected : IndexUiIntent()
     data class BatchSelectData(val apk: Boolean, val user: Boolean, val userDe: Boolean, val data: Boolean, val obb: Boolean, val media: Boolean) : IndexUiIntent()
     data class ToPageDetail(val navController: NavHostController, val packageEntity: PackageEntity) : IndexUiIntent()
@@ -131,6 +136,27 @@ class IndexViewModel @Inject constructor(
                 packageRepo.upsert(displayPackagesState.value.onEach { it.extraInfo.activated = intent.selected })
             }
 
+            is IndexUiIntent.ChangeFlag -> {
+                when (intent.flag) {
+                    PackageEntity.FLAG_NONE -> {
+                        packageRepo.upsert(intent.entity.selectApkOnly())
+                    }
+
+                    PackageEntity.FLAG_APK -> {
+                        packageRepo.upsert(intent.entity.selectDataOnly())
+                    }
+
+                    PackageEntity.FLAG_ALL -> {
+                        packageRepo.upsert(intent.entity.selectNone())
+                    }
+
+                    else -> {
+                        packageRepo.upsert(intent.entity.selectAll())
+
+                    }
+                }
+            }
+
             is IndexUiIntent.ToPageDetail -> {
                 val entity = intent.packageEntity
                 withMainContext {
@@ -192,9 +218,9 @@ class IndexViewModel @Inject constructor(
     private val _srcPackagesEmptyState: Flow<Boolean> = _packages.map { packages -> packages.isEmpty() }.flowOnIO()
     private val _packagesSelectedState: Flow<Int> = _packagesState.map { packages -> packages.count { it.extraInfo.activated } }.flowOnIO()
     private val _displayPackagesSelectedState: Flow<Map<Int, Int?>> =
-        combine(_packagesState, _userIdIndex, _userList) { packages, userIdIndex, userIdList ->
+        combine(_packagesState, _userList) { packages, userList ->
             val map = mutableMapOf<Int, Int?>()
-            userIdList.forEach { user ->
+            userList.forEach { user ->
                 val count = packages.count { it.extraInfo.activated && it.indexInfo.userId == user.id }
                 map[user.id] = if (count == 0) null else count
             }
