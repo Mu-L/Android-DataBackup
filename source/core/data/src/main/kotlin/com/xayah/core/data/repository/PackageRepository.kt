@@ -166,6 +166,10 @@ class PackageRepository @Inject constructor(
         }
     }
 
+    fun getLoadSystemAppsPredicate(value: Boolean): (PackageEntity) -> Boolean = { p ->
+        value || p.isSystemApp.not()
+    }
+
     fun getUserIdPredicateNew(indexList: List<Int>, userIdList: List<Int>): (PackageEntity) -> Boolean = { p ->
         runCatching { p.userId in indexList.map { userIdList[it] } }.getOrDefault(p.userId == 0)
     }

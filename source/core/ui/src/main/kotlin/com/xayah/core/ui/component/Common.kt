@@ -298,7 +298,7 @@ fun PackageItem(
                             tint = when (flag) {
                                 PackageEntity.FLAG_NONE -> ThemedColorSchemeKeyTokens.Error.value
                                 PackageEntity.FLAG_ALL -> ThemedColorSchemeKeyTokens.GreenPrimary.value
-                                else -> ThemedColorSchemeKeyTokens.Primary.value
+                                else -> ThemedColorSchemeKeyTokens.YellowPrimary.value
                             },
                         ) {
                             onItemsIconClick?.invoke(flag)

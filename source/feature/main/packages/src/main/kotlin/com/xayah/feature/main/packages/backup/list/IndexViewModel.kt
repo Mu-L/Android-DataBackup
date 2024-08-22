@@ -5,7 +5,7 @@ import android.content.pm.UserInfo
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavHostController
 import com.xayah.core.data.repository.PackageRepository
-import com.xayah.core.datastore.readBackupFilterFlagIndex
+import com.xayah.core.datastore.readLoadSystemApps
 import com.xayah.core.datastore.saveBackupFilterFlagIndex
 import com.xayah.core.model.DataState
 import com.xayah.core.model.OpType
@@ -49,11 +49,13 @@ sealed class IndexUiIntent : UiIntent {
     data class SetUserId(val userId: Int) : IndexUiIntent()
     data object GetUsers : IndexUiIntent()
     data class FilterByFlag(val index: Int) : IndexUiIntent()
-    data class Sort(val index: Int, val type: SortType) : IndexUiIntent()
+    data class SortByIndex(val index: Int) : IndexUiIntent()
+    data class SortByType(val type: SortType) : IndexUiIntent()
     data class FilterByKey(val key: String) : IndexUiIntent()
     data object ClearKey : IndexUiIntent()
     data class Select(val entity: PackageEntity) : IndexUiIntent()
     data class SelectAll(val selected: Boolean) : IndexUiIntent()
+    data object Reverse : IndexUiIntent()
     data class ChangeFlag(val flag: Int, val entity: PackageEntity) : IndexUiIntent()
     data object BlockSelected : IndexUiIntent()
     data class BatchSelectData(val apk: Boolean, val user: Boolean, val userDe: Boolean, val data: Boolean, val obb: Boolean, val media: Boolean) : IndexUiIntent()
@@ -110,14 +112,15 @@ class IndexViewModel @Inject constructor(
                 context.saveBackupFilterFlagIndex(intent.index)
             }
 
-            is IndexUiIntent.Sort -> {
-                var type = intent.type
+            is IndexUiIntent.SortByIndex -> {
                 val index = intent.index
-                if (_sortIndexState.value == index) {
-                    type = if (type == SortType.ASCENDING) SortType.DESCENDING else SortType.ASCENDING
-                    _sortTypeState.value = type
-                }
                 _sortIndexState.value = index
+            }
+
+            is IndexUiIntent.SortByType -> {
+                var type = intent.type
+                type = if (type == SortType.ASCENDING) SortType.DESCENDING else SortType.ASCENDING
+                _sortTypeState.value = type
             }
 
             is IndexUiIntent.FilterByKey -> {
@@ -136,6 +139,10 @@ class IndexViewModel @Inject constructor(
                 packageRepo.upsert(displayPackagesState.value.onEach { it.extraInfo.activated = intent.selected })
             }
 
+            is IndexUiIntent.Reverse -> {
+                packageRepo.upsert(displayPackagesState.value.onEach { it.extraInfo.activated = it.extraInfo.activated.not() })
+            }
+
             is IndexUiIntent.ChangeFlag -> {
                 when (intent.flag) {
                     PackageEntity.FLAG_NONE -> {
@@ -152,7 +159,6 @@ class IndexViewModel @Inject constructor(
 
                     else -> {
                         packageRepo.upsert(intent.entity.selectAll())
-
                     }
                 }
             }
@@ -192,7 +198,7 @@ class IndexViewModel @Inject constructor(
         MutableStateFlow(RefreshState())
     private val _packages: Flow<List<PackageEntity>> = packageRepo.queryPackagesFlow(opType = OpType.BACKUP, existed = true, blocked = false).flowOnIO()
     private var _keyState: MutableStateFlow<String> = MutableStateFlow("")
-    private var _flagIndex: Flow<Int> = context.readBackupFilterFlagIndex().flowOnIO()
+    private var _loadSystemApps: Flow<Boolean> = context.readLoadSystemApps().flowOnIO()
     private var _userIdIndex: MutableStateFlow<Int> = MutableStateFlow(0)
     private var _userList: MutableStateFlow<List<UserInfo>> = MutableStateFlow(listOf())
     private var _sortIndexState: MutableStateFlow<Int> = MutableStateFlow(0)
@@ -201,13 +207,13 @@ class IndexViewModel @Inject constructor(
         combine(
             _packages,
             _keyState,
-            _flagIndex,
+            _loadSystemApps,
             _sortIndexState,
             _sortTypeState,
-        ) { packages, key, flagIndex, sortIndex, sortType ->
+        ) { packages, key, loadSystemApps, sortIndex, sortType ->
             packages.asSequence()
                 .filter(packageRepo.getKeyPredicateNew(key = key))
-                .filter(packageRepo.getFlagPredicateNew(index = flagIndex))
+                .filter(packageRepo.getLoadSystemAppsPredicate(value = loadSystemApps))
                 .sortedWith(packageRepo.getSortComparatorNew(sortIndex = sortIndex, sortType = sortType))
                 .sortedByDescending { it.extraInfo.activated }.toList()
         }.flowOnIO()
@@ -232,7 +238,7 @@ class IndexViewModel @Inject constructor(
     val packagesSelectedState: StateFlow<Int> = _packagesSelectedState.stateInScope(0)
     val displayPackagesSelectedState: StateFlow<Map<Int, Int?>> = _displayPackagesSelectedState.stateInScope(mapOf())
     val refreshState: StateFlow<RefreshState> = _refreshState.asStateFlow()
-    val flagIndexState: StateFlow<Int> = _flagIndex.stateInScope(1)
+    val loadSystemApps: StateFlow<Boolean> = _loadSystemApps.stateInScope(false)
     val userListState: StateFlow<List<UserInfo>> = _userList.stateInScope(listOf())
     val userIdIndexState: StateFlow<Int> = _userIdIndex.stateInScope(0)
     val sortIndexState: StateFlow<Int> = _sortIndexState.stateInScope(0)
