@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.library.common)
+    alias(libs.plugins.library.hilt)
 }
 
 android {
@@ -10,6 +11,7 @@ dependencies {
     // Core
     implementation(project(":core:model"))
     implementation(project(":core:common"))
+    implementation(project(":core:util"))
 
     // Preferences DataStore
     implementation(libs.androidx.datastore.preferences)

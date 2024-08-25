@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.UserHandle
-import com.xayah.core.data.R
 import com.xayah.core.data.util.srcDir
 import com.xayah.core.database.dao.PackageDao
 import com.xayah.core.datastore.readBackupFilterFlagIndex
@@ -42,7 +41,6 @@ import com.xayah.core.model.database.PackageStorageStats
 import com.xayah.core.model.util.suffixOf
 import com.xayah.core.network.client.CloudClient
 import com.xayah.core.rootservice.service.RemoteRootService
-import com.xayah.core.ui.model.RefreshState
 import com.xayah.core.util.ConfigsPackageRestoreName
 import com.xayah.core.util.DateUtil
 import com.xayah.core.util.IconRelativeDir
@@ -57,7 +55,6 @@ import com.xayah.core.util.iconDir
 import com.xayah.core.util.localBackupSaveDir
 import com.xayah.core.util.withLog
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import java.text.Collator
@@ -315,15 +312,13 @@ class PackageRepository @Inject constructor(
     }
 
     @SuppressLint("StringFormatInvalid")
-    suspend fun refresh(refreshState: MutableStateFlow<RefreshState>) = run {
-        packageDao.clearExisted(opType = OpType.BACKUP)
+    suspend fun refresh() = run {
         val checkKeystore = context.readCheckKeystore().first()
         val loadSystemApps = context.readLoadSystemApps().first()
         val pm = context.packageManager
         val userInfoList = rootService.getUsers()
         for (userInfo in userInfoList) {
             val userId = userInfo.id
-            refreshState.emit(refreshState.value.copy(user = context.getString(R.string.args_loading_from_user, userId)))
             val userHandle = rootService.getUserHandle(userId)
             val installedPackages = getInstalledPackages(userId)
             val installedPackagesCount = (installedPackages.size - 1).coerceAtLeast(1)
@@ -342,15 +337,9 @@ class PackageRepository @Inject constructor(
                 if (loadSystemApps || isSystemApp.not()) {
                     val packageEntity = handlePackage(pm, info, checkKeystore, userId, userHandle, hasPassedOneDay)
                     upsert(packageEntity)
-
-                    refreshState.emit(refreshState.value.copy(pkg = info.packageName))
                 }
-
-                if (index % epoch == 0) refreshState.emit(refreshState.value.copy(progress = index.toFloat() / installedPackagesCount))
             }
-            refreshState.emit(RefreshState(progress = 1f, pkg = ""))
         }
-        refreshState.emit(RefreshState(progress = 1f, pkg = ""))
     }
 
     @SuppressLint("StringFormatInvalid")

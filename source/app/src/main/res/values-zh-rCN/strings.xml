@@ -349,4 +349,11 @@
     <string name="data_selected">仅选择了数据</string>
     <string name="all_selected">选择了所有数据项</string>
     <string name="custom_selected">选择了自定义数据项</string>
+    <string name="data_items">数据项</string>
+    <string name="unselect_all">全部不选</string>
+    <string name="reverse_selection">反选选择项</string>
+    <string name="for_selected">对于已选择的…</string>
+    <string name="block">禁用</string>
+    <string name="detailed_data_items">详细数据项</string>
+    <string name="refresh">刷新</string>
 </resources>

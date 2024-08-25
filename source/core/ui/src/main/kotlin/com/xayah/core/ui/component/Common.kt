@@ -270,6 +270,12 @@ fun PackageItem(
                 }
 
                 AnimatedContent(targetState = item.selectionFlag, label = AnimationTokens.AnimatedContentLabel) { flag ->
+                    val state = rememberTooltipState()
+
+                    LaunchedEffect(flag) {
+                        state.show()
+                    }
+
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                         tooltip = {
@@ -285,7 +291,7 @@ fun PackageItem(
                                 )
                             }
                         },
-                        state = rememberTooltipState()
+                        state = state
                     ) {
                         IconButton(
                             icon = when (flag) {

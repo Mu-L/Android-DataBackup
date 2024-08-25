@@ -359,4 +359,11 @@
     <string name="data_selected">Data selected</string>
     <string name="all_selected">All items selected</string>
     <string name="custom_selected">Custom items selected</string>
+    <string name="data_items">Data items</string>
+    <string name="unselect_all">Unselect all</string>
+    <string name="reverse_selection">Reverse selection</string>
+    <string name="for_selected">For selected…</string>
+    <string name="block">Block</string>
+    <string name="detailed_data_items">Detailed data items</string>
+    <string name="refresh">Refresh</string>
 </resources>
