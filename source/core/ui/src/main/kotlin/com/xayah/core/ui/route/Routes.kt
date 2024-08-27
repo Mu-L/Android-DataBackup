@@ -1,5 +1,8 @@
 package com.xayah.core.ui.route
 
+import com.xayah.core.model.OpType
+import com.xayah.core.model.Target
+
 sealed class MainRoutes(val route: String) {
     companion object {
         const val ARG_PACKAGE_NAME = "pkgName"
@@ -8,6 +11,8 @@ sealed class MainRoutes(val route: String) {
         const val ARG_PRESERVE_ID = "preserveId"
         const val ARG_ACCOUNT_NAME = "accountName"
         const val ARG_ACCOUNT_REMOTE = "accountRemote"
+        const val ARG_TARGET = "target"
+        const val ARG_OP_TYPE = "opType"
     }
 
     data object Dashboard : MainRoutes(route = "main_dashboard")
@@ -40,6 +45,10 @@ sealed class MainRoutes(val route: String) {
     data object Configurations : MainRoutes(route = "main_configurations")
     data object About : MainRoutes(route = "main_about")
     data object Translators : MainRoutes(route = "main_translators")
+
+    data object List : MainRoutes(route = "main_list/{$ARG_TARGET}/{$ARG_OP_TYPE}") {
+        fun getRoute(target: Target, opType: OpType) = "main_list/${target}/${opType}"
+    }
 
     data object PackagesBackupList : MainRoutes(route = "main_packages_backup_list")
     data object PackagesBackupDetail : MainRoutes(route = "main_packages_backup_detail/{$ARG_PACKAGE_NAME}/{$ARG_USER_ID}") {

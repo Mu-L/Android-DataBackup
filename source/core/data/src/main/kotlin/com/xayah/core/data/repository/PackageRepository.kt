@@ -163,7 +163,7 @@ class PackageRepository @Inject constructor(
         }
     }
 
-    fun getLoadSystemAppsPredicate(value: Boolean): (PackageEntity) -> Boolean = { p ->
+    fun getShowSystemAppsPredicate(value: Boolean): (PackageEntity) -> Boolean = { p ->
         value || p.isSystemApp.not()
     }
 

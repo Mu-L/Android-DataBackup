@@ -1,6 +1,6 @@
-package com.xayah.core.util.di
+package com.xayah.core.datastore.di
 
-import com.xayah.core.util.di.DbDispatchers.Default
+import com.xayah.core.datastore.di.DbDispatchers.Default
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

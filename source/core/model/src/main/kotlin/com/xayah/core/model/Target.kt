@@ -1,6 +1,6 @@
 package com.xayah.core.model
 
-enum class Targets {
+enum class Target {
     Apps,
     Files
 }

@@ -2,9 +2,9 @@ package com.xayah.feature.main.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.xayah.core.data.repository.SettingsDataRepo
+import com.xayah.core.data.repository.ListData
+import com.xayah.core.data.repository.ListDataRepo
 import com.xayah.core.hiddenapi.castTo
-import com.xayah.core.model.SettingsData
 import com.xayah.core.model.SortType
 import com.xayah.feature.main.list.ListBottomSheetUiState.Loading
 import com.xayah.feature.main.list.ListBottomSheetUiState.Success
@@ -18,31 +18,37 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ListBottomSheetViewModel @Inject constructor(
-    private val settingsDataRepo: SettingsDataRepo,
+    private val listDataRepo: ListDataRepo,
 ) : ViewModel() {
-    val uiState: StateFlow<ListBottomSheetUiState> = settingsDataRepo.settingsData.map { Success(settingsData = it) }.stateIn(
+    val uiState: StateFlow<ListBottomSheetUiState> = listDataRepo.getListData().map { Success(listData = it) }.stateIn(
         scope = viewModelScope,
         initialValue = Loading,
         started = SharingStarted.WhileSubscribed(5_000),
     )
 
-    fun setLoadSystemApps() {
+    private fun onSuccess(block: suspend (Success) -> Unit) {
         viewModelScope.launch {
             if (uiState.value is Success) {
-                settingsDataRepo.setLoadSystemApps(uiState.value.castTo<Success>().settingsData.isLoadSystemApps.not())
+                block(uiState.value.castTo())
             }
         }
     }
 
-    fun setSortByType() {}
-    fun setSortByIndex(index: Int) {}
+    fun setLoadSystemApps() = onSuccess { state ->
+        listDataRepo.setShowSystemApps(state.listData.showSystemApps.not())
+    }
+
+
+    fun setSortByType() = onSuccess { state ->
+        listDataRepo.setSortType(if (state.listData.sortType == SortType.ASCENDING) SortType.DESCENDING else SortType.ASCENDING)
+    }
+
+    fun setSortByIndex(index: Int) = onSuccess {
+        listDataRepo.setSortIndex(index)
+    }
 }
 
 sealed interface ListBottomSheetUiState {
     data object Loading : ListBottomSheetUiState
-    data class Success(
-        val sortIndex: Int = 0,
-        val sortType: SortType = SortType.ASCENDING,
-        val settingsData: SettingsData,
-    ) : ListBottomSheetUiState
+    data class Success(val listData: ListData) : ListBottomSheetUiState
 }

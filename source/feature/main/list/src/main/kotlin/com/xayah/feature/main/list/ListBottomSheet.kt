@@ -24,9 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.xayah.core.model.Operation
+import com.xayah.core.model.OpType
 import com.xayah.core.model.SortType
-import com.xayah.core.model.Targets
+import com.xayah.core.model.Target
 import com.xayah.core.ui.component.BodyLargeText
 import com.xayah.core.ui.component.IconButton
 import com.xayah.core.ui.component.ModalBottomSheet
@@ -43,8 +43,8 @@ import kotlinx.coroutines.launch
 internal fun ListFilterSheet(
     viewModel: ListBottomSheetViewModel = hiltViewModel(),
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
-    targets: Targets,
-    operation: Operation,
+    target: Target,
+    opType: OpType,
     isShow: Boolean,
     onDismiss: () -> Unit,
 ) {
@@ -60,34 +60,34 @@ internal fun ListFilterSheet(
 
     if (uiState is ListBottomSheetUiState.Success) {
         val state = uiState as ListBottomSheetUiState.Success
-        when (targets) {
-            Targets.Apps -> {
-                when (operation) {
-                    Operation.Backup -> AppsBackupFilterSheet(
-                        isShow,
-                        sheetState,
-                        state.settingsData.isLoadSystemApps,
-                        state.sortIndex,
-                        state.sortType,
+        when (target) {
+            Target.Apps -> {
+                when (opType) {
+                    OpType.BACKUP -> AppsBackupFilterSheet(
+                        isShow = isShow,
+                        sheetState = sheetState,
+                        isLoadSystemApps = state.listData.showSystemApps,
+                        sortIndex = state.listData.sortIndex,
+                        sortType = state.listData.sortType,
                         onLoadSystemAppsChanged = viewModel::setLoadSystemApps,
                         onSortByType = viewModel::setSortByType,
                         onSortByIndex = viewModel::setSortByIndex,
                         onDismissRequest = onDismissRequest,
                     )
 
-                    Operation.Restore -> {
+                    OpType.RESTORE -> {
 
                     }
                 }
             }
 
-            Targets.Files -> {
-                when (operation) {
-                    Operation.Backup -> {
+            Target.Files -> {
+                when (opType) {
+                    OpType.BACKUP -> {
 
                     }
 
-                    Operation.Restore -> {
+                    OpType.RESTORE -> {
 
                     }
                 }

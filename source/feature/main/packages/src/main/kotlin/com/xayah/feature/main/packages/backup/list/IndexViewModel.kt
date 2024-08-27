@@ -191,7 +191,7 @@ class IndexViewModel @Inject constructor(
         ) { packages, key, loadSystemApps, sortIndex, sortType ->
             packages.asSequence()
                 .filter(packageRepo.getKeyPredicateNew(key = key))
-                .filter(packageRepo.getLoadSystemAppsPredicate(value = loadSystemApps))
+                .filter(packageRepo.getShowSystemAppsPredicate(value = loadSystemApps))
                 .sortedWith(packageRepo.getSortComparatorNew(sortIndex = sortIndex, sortType = sortType))
                 .sortedByDescending { it.extraInfo.activated }.toList()
         }.flowOnIO()

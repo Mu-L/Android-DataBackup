@@ -4,6 +4,7 @@ import android.content.pm.ApplicationInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.xayah.core.model.App
 import com.xayah.core.model.CompressionType
 import com.xayah.core.model.DataState
 import com.xayah.core.model.OpType
@@ -177,3 +178,13 @@ data class PackageEntity(
     val archivesRelativeDir: String
         get() = "${packageName}/user_${userId}${if (preserveId == 0L) "" else "@$preserveId"}"
 }
+
+
+fun PackageEntity.asExternalModel() = App(
+    id = id,
+    packageName = packageName,
+    label = packageInfo.label,
+    isSystemApp = isSystemApp,
+    selectionFlag = selectionFlag,
+    selected = extraInfo.activated
+)

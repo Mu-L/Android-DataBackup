@@ -5,9 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import com.xayah.core.util.di.ApplicationScope
-import com.xayah.core.util.di.DbDispatchers.IO
-import com.xayah.core.util.di.Dispatcher
+import com.xayah.core.datastore.di.DbDispatchers.IO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,7 +15,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
-private const val PREFERENCE_NAME = "DataStore"
+private const val PREFERENCE_NAME = "DataStore_"
 
 @Module
 @InstallIn(SingletonComponent::class)

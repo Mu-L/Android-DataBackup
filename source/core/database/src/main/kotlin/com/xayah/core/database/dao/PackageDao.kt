@@ -1,6 +1,7 @@
 package com.xayah.core.database.dao
 
 import androidx.room.Dao
+import androidx.room.MapColumn
 import androidx.room.Query
 import androidx.room.Upsert
 import com.xayah.core.model.CompressionType
@@ -65,6 +66,33 @@ interface PackageDao {
     @Query("UPDATE PackageEntity SET extraInfo_existed = 0 WHERE indexInfo_opType = :opType")
     suspend fun clearExisted(opType: OpType)
 
+    @Query("UPDATE PackageEntity SET extraInfo_activated = :activated WHERE id = :id")
+    suspend fun activateById(id: Long, activated: Boolean)
+
+    @Query("UPDATE PackageEntity SET extraInfo_activated = :activated WHERE id in (:ids)")
+    suspend fun activateByIds(ids: List<Long>, activated: Boolean)
+
+    @Query("UPDATE PackageEntity SET extraInfo_activated = NOT extraInfo_activated WHERE id in (:ids)")
+    suspend fun reverseActivatedByIds(ids: List<Long>)
+
+    @Query(
+        "SELECT id FROM PackageEntity WHERE" +
+                " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked AND indexInfo_userId = :userId"
+    )
+    suspend fun queryAppIds(opType: OpType, userId: Int, existed: Boolean, blocked: Boolean): List<Long>
+
+    @Query(
+        "UPDATE PackageEntity" +
+                " SET dataStates_apkState = :apk," +
+                " dataStates_userState = :user," +
+                " dataStates_userDeState = :userDe," +
+                " dataStates_dataState = :data," +
+                " dataStates_obbState = :obb," +
+                " dataStates_mediaState = :media" +
+                " WHERE id = :id"
+    )
+    suspend fun selectDataItemsById(id: Long, apk: String, user: String, userDe: String, data: String, obb: String, media: String)
+
     @Query(
         "SELECT * FROM PackageEntity WHERE" +
                 " indexInfo_packageName = :packageName AND indexInfo_opType = :opType AND indexInfo_userId = :userId AND indexInfo_preserveId = :preserveId" +
@@ -83,6 +111,27 @@ interface PackageDao {
                 " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked"
     )
     fun queryPackagesFlow(opType: OpType, existed: Boolean, blocked: Boolean): Flow<List<PackageEntity>>
+
+    @Query(
+        "SELECT COUNT(*) FROM PackageEntity WHERE" +
+                " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked"
+    )
+    fun countPackagesFlow(opType: OpType, existed: Boolean, blocked: Boolean): Flow<Long>
+
+    @Query(
+        "SELECT COUNT(*) FROM PackageEntity WHERE" +
+                " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked AND extraInfo_activated = 1"
+    )
+    fun countActivatedPackagesFlow(opType: OpType, existed: Boolean, blocked: Boolean): Flow<Long>
+
+    @Query(
+        "SELECT indexInfo_userId, COUNT(*) as iCount FROM PackageEntity WHERE" +
+                " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked AND" +
+                " extraInfo_activated = 1 GROUP BY indexInfo_userId"
+    )
+    fun countUsersMapFlow(opType: OpType, existed: Boolean, blocked: Boolean): Flow<
+            Map<@MapColumn(columnName = "indexInfo_userId") Int, @MapColumn(columnName = "iCount") Long>
+            >
 
     @Query(
         "SELECT * FROM PackageEntity WHERE" +
@@ -132,4 +181,10 @@ interface PackageDao {
 
     @Query("DELETE FROM PackageEntity WHERE indexInfo_backupDir = :backupDir")
     suspend fun delete(backupDir: String)
+
+    @Query(
+        "SELECT * FROM PackageEntity WHERE" +
+                " indexInfo_opType = :opType AND extraInfo_existed = :existed AND extraInfo_blocked = :blocked"
+    )
+    fun getApps(opType: OpType, existed: Boolean, blocked: Boolean): Flow<List<PackageEntity>>
 }
