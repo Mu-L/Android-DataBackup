@@ -14,7 +14,7 @@ class MessageRepository {
         private const val TAG = "MessageRepository"
     }
 
-    val isBackupContactsSelected: Flow<Boolean> = application.readBoolean(MessagesOptionSelectedBackup)
+    val isBackupMessagesSelected: Flow<Boolean> = application.readBoolean(MessagesOptionSelectedBackup)
 
     val smsList: Flow<List<Sms>> = DatabaseHelper.messageDao.loadFlowSms()
     val smsListSelected: Flow<List<Sms>> = smsList.map { smsList -> smsList.filter { it.selected } }

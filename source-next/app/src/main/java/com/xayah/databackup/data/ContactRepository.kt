@@ -13,7 +13,7 @@ class ContactRepository {
         private const val TAG = "ContactRepository"
     }
 
-    val isBackupMessagesSelected: Flow<Boolean> = application.readBoolean(ContactsOptionSelectedBackup)
+    val isBackupContactsSelected: Flow<Boolean> = application.readBoolean(ContactsOptionSelectedBackup)
 
     val contacts: Flow<List<Contact>> = DatabaseHelper.contactDao.loadFlowContacts()
     val contactsSelected: Flow<List<Contact>> = contacts.map { contacts -> contacts.filter { it.selected } }

@@ -24,10 +24,10 @@ class RusticBackupSelectionProvider(
             apps = if (mAppRepo.isBackupAppsSelected.first()) mAppRepo.appsFilteredAndSelected.first() else emptyList(),
             files = if (mFileRepo.isBackupFilesSelected.first()) mFileRepo.filesSelected.first() else emptyList(),
             networks = if (mNetworkRepo.isBackupNetworksSelected.first()) mNetworkRepo.networksSelected.first() else null,
-            contacts = if (mContactRepo.isBackupMessagesSelected.first()) mContactRepo.contactsSelected.first() else null,
+            contacts = if (mContactRepo.isBackupContactsSelected.first()) mContactRepo.contactsSelected.first() else null,
             callLogs = if (mCallLogRepo.isBackupCallLogsSelected.first()) mCallLogRepo.callLogsSelected.first() else null,
-            sms = if (mMessageRepo.isBackupContactsSelected.first()) mMessageRepo.smsListSelected.first() else null,
-            mms = if (mMessageRepo.isBackupContactsSelected.first()) mMessageRepo.mmsListSelected.first() else null,
+            sms = if (mMessageRepo.isBackupMessagesSelected.first()) mMessageRepo.smsListSelected.first() else null,
+            mms = if (mMessageRepo.isBackupMessagesSelected.first()) mMessageRepo.mmsListSelected.first() else null,
         )
     }
 }

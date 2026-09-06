@@ -168,7 +168,7 @@ class BackupProcessRepository(
         _contactsItem.update {
             it.copy(
                 isLoading = false,
-                isSelected = mContactRepo.isBackupMessagesSelected.first(),
+                isSelected = mContactRepo.isBackupContactsSelected.first(),
                 currentIndex = 0,
                 totalCount = _contacts.size,
                 progress = 0f
@@ -195,7 +195,7 @@ class BackupProcessRepository(
         _messagesItem.update {
             it.copy(
                 isLoading = false,
-                isSelected = nMessageRepo.isBackupContactsSelected.first(),
+                isSelected = nMessageRepo.isBackupMessagesSelected.first(),
                 currentIndex = 0,
                 totalCount = _smsList.size + _mmsList.size,
                 progress = 0f

@@ -32,10 +32,11 @@ import kotlinx.coroutines.withTimeout
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.seconds
 
 object BackupService {
     private const val TAG = "BackupService"
-    private const val TIMEOUT = 10000L // 10s
+    private const val TIMEOUT = 10 // 10s
 
     private var mMutex = Mutex()
     private var mBinder: IBinder? = null
@@ -120,7 +121,7 @@ object BackupService {
                 }
 
                 ensureNotCanceled("contacts backup")
-                if (mContactRepo.isBackupMessagesSelected.first()) {
+                if (mContactRepo.isBackupContactsSelected.first()) {
                     backupContacts()
                 }
 
@@ -130,7 +131,7 @@ object BackupService {
                 }
 
                 ensureNotCanceled("messages backup")
-                if (mMessageRepo.isBackupContactsSelected.first()) {
+                if (mMessageRepo.isBackupMessagesSelected.first()) {
                     backupMessages()
                 }
 
@@ -142,7 +143,7 @@ object BackupService {
     }
 
     private suspend fun bindService(context: Context): BackupServiceImpl {
-        return withTimeout(TIMEOUT) {
+        return withTimeout(TIMEOUT.seconds) {
             suspendCancellableCoroutine { continuation ->
                 if (mService == null) {
                     val connection = object : ServiceConnection {

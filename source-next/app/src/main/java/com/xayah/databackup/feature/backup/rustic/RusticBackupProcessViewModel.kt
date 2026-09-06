@@ -104,7 +104,7 @@ open class RusticBackupProcessViewModel(
     )
 
     val contactsItem: StateFlow<RusticBackupSourceUiItem> = combine(
-        mContactRepo.isBackupMessagesSelected,
+        mContactRepo.isBackupContactsSelected,
         mContactRepo.contactsSelected,
         mContactRepo.contacts,
     ) { selected, selectedContacts, contacts ->
@@ -140,7 +140,7 @@ open class RusticBackupProcessViewModel(
     )
 
     val messagesItem: StateFlow<RusticBackupSourceUiItem> = combine(
-        mMessageRepo.isBackupContactsSelected,
+        mMessageRepo.isBackupMessagesSelected,
         mMessageRepo.smsList,
         mMessageRepo.mmsList,
     ) { selected, smsList, mmsList ->

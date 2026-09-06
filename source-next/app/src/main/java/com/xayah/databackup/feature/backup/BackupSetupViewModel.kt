@@ -123,7 +123,7 @@ open class BackupSetupViewModel(
     )
 
     val contactsItem: StateFlow<TargetItem?> = combine(
-        contactRepo.isBackupMessagesSelected,
+        contactRepo.isBackupContactsSelected,
         contactRepo.contacts,
     ) { selected, contacts ->
         TargetItem(
@@ -151,7 +151,7 @@ open class BackupSetupViewModel(
     )
 
     val messagesItem: StateFlow<TargetItem?> = combine(
-        messageRepo.isBackupContactsSelected,
+        messageRepo.isBackupMessagesSelected,
         messageRepo.smsList,
         messageRepo.mmsList,
     ) { selected, smsList, mmsList ->
