@@ -539,4 +539,6 @@
     <string name="all">Wszystkie</string>
     <string name="recent_backups">Ostatnie kopie zapasowe</string>
     <string name="view_all">Zobacz wszystko</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
+    <string name="snapshots">Migawki</string>
 </resources>
