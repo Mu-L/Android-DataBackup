@@ -1691,6 +1691,7 @@ dependencies = [
  "log",
  "rustic_backend",
  "rustic_core",
+ "serde_json",
  "simplelog",
  "thiserror",
 ]

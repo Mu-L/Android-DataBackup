@@ -1,10 +1,16 @@
 package com.xayah.databackup.data.rustic
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapter
 import com.xayah.databackup.rootservice.ICallback
 import com.xayah.databackup.rootservice.RemoteRootService
+import com.xayah.databackup.util.PathHelper
+import kotlinx.coroutines.CancellationException
 
 /** Provides privileged Rustic repository and filesystem operations through [RemoteRootService]. */
 class RusticBackupGateway {
+    private val snapshotListAdapter = Moshi.Builder().build().adapter<List<RusticSnapshot>>()
+
     suspend fun exists(path: String): Boolean = RemoteRootService.exists(path)
 
     suspend fun isDirectoryEmpty(path: String): Boolean = RemoteRootService.listFilePaths(path, listFiles = true, listDirs = true).isEmpty()
@@ -65,5 +71,32 @@ class RusticBackupGateway {
                 }
             },
         )
+    }
+
+    suspend fun listSnapshots(repositoryPath: String, password: String): List<RusticSnapshot> {
+        val serialized = RemoteRootService.listRusticSnapshots(repositoryPath = repositoryPath, password = password)
+        val snapshots = requireNotNull(snapshotListAdapter.fromJson(serialized)) { "Missing snapshot list" }
+        try {
+            RemoteRootService.writeText(
+                PathHelper.getRusticSnapshotsCacheFile(PathHelper.getParentPath(repositoryPath)),
+                snapshotListAdapter.toJson(snapshots),
+            )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            // Cache failures must not discard freshly loaded metadata.
+        }
+        return snapshots
+    }
+
+    suspend fun readCachedSnapshots(repositoryPath: String): List<RusticSnapshot>? {
+        val cachePath = PathHelper.getRusticSnapshotsCacheFile(PathHelper.getParentPath(repositoryPath))
+        return try {
+            if (RemoteRootService.exists(cachePath)) snapshotListAdapter.fromJson(RemoteRootService.readText(cachePath)) else null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            null
+        }
     }
 }

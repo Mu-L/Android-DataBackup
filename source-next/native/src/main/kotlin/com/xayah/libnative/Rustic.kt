@@ -29,10 +29,18 @@ object Rustic {
         nativeRestoreSnapshot(repositoryPath, password, snapshotId, destinationPath)
     }
 
+    fun listSnapshots(repositoryPath: String, password: String): String {
+        return nativeListSnapshots(repositoryPath, password)
+    }
+
     fun checkRepository(repositoryPath: String, password: String) {
         nativeCheckRepository(repositoryPath, password)
     }
 
+    fun readSnapshotTextFiles(repositoryPath: String, password: String, snapshotId: String, paths: List<String>): String =
+        nativeReadSnapshotTextFiles(repositoryPath, password, snapshotId, paths.toTypedArray())
+
+    private external fun nativeReadSnapshotTextFiles(repositoryPath: String, password: String, snapshotId: String, paths: Array<String>): String
     private external fun nativeInitLogger()
     private external fun nativeInitRepository(repositoryPath: String, password: String)
     private external fun nativeRepositoryExists(repositoryPath: String): Boolean
@@ -44,13 +52,12 @@ object Rustic {
         tags: Array<String>,
         callback: Any?,
     ): String
-
     private external fun nativeRestoreSnapshot(
         repositoryPath: String,
         password: String,
         snapshotId: String,
         destinationPath: String,
     )
-
+    private external fun nativeListSnapshots(repositoryPath: String, password: String): String
     private external fun nativeCheckRepository(repositoryPath: String, password: String)
 }

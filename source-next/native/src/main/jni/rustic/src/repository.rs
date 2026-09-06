@@ -8,6 +8,7 @@ use rustic_core::{
 use crate::Result;
 use crate::progress::{AndroidProgressBars, RusticProgressCallback};
 
+/// Initializes a repository with the supplied password and default configuration.
 pub fn init_repository(repository_path: &str, password: &str) -> Result<()> {
     let credentials = Credentials::password(password);
 
@@ -20,18 +21,25 @@ pub fn init_repository(repository_path: &str, password: &str) -> Result<()> {
     Ok(())
 }
 
+/// Returns whether a repository configuration exists at the given path.
+///
+/// This does not validate credentials or repository integrity.
 pub fn repository_exists(repository_path: &str) -> Result<bool> {
     let repo = Repository::new(&RepositoryOptions::default(), &backends(repository_path)?)?;
 
     Ok(repo.config_id()?.is_some())
 }
 
+/// Validates that the repository can be opened with the supplied password.
+///
+/// This does not perform a repository integrity check.
 pub fn validate_repository(repository_path: &str, password: &str) -> Result<()> {
     open_repository(repository_path, password)?;
 
     Ok(())
 }
 
+/// Backs up the source paths with the supplied tags and returns the snapshot ID.
 pub fn create_snapshot(
     repository_path: &str,
     password: &str,
@@ -45,6 +53,9 @@ pub fn create_snapshot(
     )
 }
 
+/// Backs up the source paths with the supplied tags and reports byte progress.
+///
+/// Returns the snapshot ID after the backup completes.
 pub fn create_snapshot_with_progress<C: RusticProgressCallback>(
     repository_path: &str,
     password: &str,
@@ -84,6 +95,7 @@ fn create_snapshot_from_repository(
     Ok(snapshot.id.to_string())
 }
 
+/// Restores the selected snapshot to the destination path.
 pub fn restore_snapshot(
     repository_path: &str,
     password: &str,
@@ -104,6 +116,32 @@ pub fn restore_snapshot(
     Ok(())
 }
 
+/// Returns snapshot metadata as a JSON array, ordered from newest to oldest.
+///
+/// Each object includes `created_at` as milliseconds since the Unix epoch.
+pub fn list_snapshots(repository_path: &str, password: &str) -> Result<String> {
+    // Snapshot metadata lives in dedicated snapshot files. Loading the repository's
+    // complete data index here makes a metadata-only list operation unnecessarily slow.
+    let repo = open_repository(repository_path, password)?;
+    let mut snapshots = repo.get_all_snapshots()?;
+    snapshots.sort_by(|left, right| right.time.cmp(&left.time));
+
+    let snapshots = snapshots
+        .into_iter()
+        .map(|snapshot| -> Result<serde_json::Value> {
+            let created_at = snapshot.time.timestamp().as_millisecond();
+            let mut value = serde_json::to_value(snapshot)?;
+            if let serde_json::Value::Object(ref mut object) = value {
+                object.insert("created_at".to_string(), created_at.into());
+            }
+            Ok(value)
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(serde_json::to_string(&snapshots)?)
+}
+
+/// Checks repository integrity using Rustic's default checks and trusting cached data.
 pub fn check_repository(repository_path: &str, password: &str) -> Result<()> {
     let repo = open_repository(repository_path, password)?;
 
@@ -136,4 +174,33 @@ fn backends(repository_path: &str) -> Result<RepositoryBackends> {
     Ok(BackendOptions::default()
         .repository(repository_path)
         .to_backends()?)
+}
+
+/// Reads UTF-8 text from the specified files in a snapshot without restoring them to the filesystem.
+///
+/// Returns a JSON object mapping each requested path to its text content.
+/// `snapshot_id` must be an explicit hexadecimal snapshot ID or prefix, not `latest`.
+///
+/// # Errors
+///
+/// Returns an error if the repository or requested files cannot be read, the snapshot
+/// ID cannot be resolved or has an invalid format, or any file contains invalid UTF-8.
+pub fn read_snapshot_text_files(
+    repository_path: &str,
+    password: &str,
+    snapshot_id: &str,
+    paths: &[String],
+) -> Result<String> {
+    if snapshot_id.is_empty() || !snapshot_id.bytes().all(|c| c.is_ascii_hexdigit()) {
+        return Err("An explicit snapshot ID is required".into());
+    }
+    let repo = open_repository(repository_path, password)?.to_indexed()?;
+    let mut result = serde_json::Map::new();
+    for path in paths {
+        let node = repo.node_from_snapshot_path(&format!("{snapshot_id}:{path}"), |_| true)?;
+        let mut content = Vec::new();
+        repo.dump(&node, &mut content)?;
+        result.insert(path.clone(), String::from_utf8(content)?.into());
+    }
+    Ok(serde_json::to_string(&result)?)
 }

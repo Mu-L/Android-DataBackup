@@ -144,6 +144,57 @@ fn create_and_restore_snapshot_with_multiple_direct_sources() -> Result<(), Box<
     Ok(())
 }
 
+#[test]
+fn lists_all_snapshots_with_complete_metadata() -> Result<(), Box<dyn Error>> {
+    let root = temp_path("list-config-snapshots")?;
+    let repository = root.join("repo");
+    let source = root.join("source");
+    let password = "password";
+    let first_tag = "databackup:config:first";
+    let second_tag = "databackup:config:second";
+
+    fs::create_dir_all(&source)?;
+    fs::write(source.join("data.txt"), b"first")?;
+    rustic::init_repository(repository.to_str().unwrap(), password)?;
+    assert_eq!(rustic::list_snapshots(repository.to_str().unwrap(), password)?, "[]");
+    assert!(rustic::list_snapshots(repository.to_str().unwrap(), "incorrect-password").is_err());
+    let source_paths = [source.to_string_lossy().into_owned()];
+    let first_snapshot = rustic::create_snapshot(
+        repository.to_str().unwrap(),
+        password,
+        &source_paths,
+        &["databackup".to_string(), first_tag.to_string()],
+    )?;
+
+    fs::write(source.join("data.txt"), b"second")?;
+    let second_snapshot = rustic::create_snapshot(
+        repository.to_str().unwrap(),
+        password,
+        &source_paths,
+        &["databackup".to_string(), second_tag.to_string()],
+    )?;
+
+    let listed_snapshots = rustic::list_snapshots(repository.to_str().unwrap(), password)?;
+    let snapshots: serde_json::Value = serde_json::from_str(&listed_snapshots)?;
+    let snapshots = snapshots.as_array().unwrap();
+    assert_eq!(snapshots.len(), 2);
+    let listed_ids = snapshots
+        .iter()
+        .map(|snapshot| snapshot["id"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert!(listed_ids.iter().any(|id| id.starts_with(&first_snapshot)));
+    assert!(listed_ids.iter().any(|id| id.starts_with(&second_snapshot)));
+    assert!(snapshots[0]["created_at"].is_i64() || snapshots[0]["created_at"].is_u64());
+    assert!(snapshots[0]["created_at"].as_i64().unwrap() >= snapshots[1]["created_at"].as_i64().unwrap());
+    assert!(snapshots[0]["time"].is_string());
+    assert!(snapshots[0]["paths"].is_array());
+    assert!(snapshots[0]["tags"].is_array());
+    assert!(snapshots[0]["summary"].is_object());
+
+    fs::remove_dir_all(root)?;
+    Ok(())
+}
+
 fn run_snapshot_lifecycle(
     temp_name: &str,
     file_name: &str,
@@ -194,4 +245,31 @@ fn find_file(root: &Path, name: &str) -> Result<std::path::PathBuf, Box<dyn Erro
     }
 
     Err(format!("missing restored file {name}").into())
+}
+
+#[test]
+fn reads_metadata_from_snapshot_without_restoring_live_files() -> Result<(), Box<dyn Error>> {
+    let root = temp_path("read-snapshot-metadata")?;
+    let repository = root.join("repo");
+    let source = root.join("source");
+    fs::create_dir_all(&source)?;
+    let metadata = source.join("manifest.json");
+    fs::write(&metadata, r#"{"schemaVersion":1}"#)?;
+    rustic::init_repository(repository.to_str().unwrap(), "password")?;
+    let snapshot = rustic::create_snapshot(
+        repository.to_str().unwrap(), "password", &[source.to_string_lossy().into_owned()], &[],
+    )?;
+    fs::write(&metadata, "changed on device")?;
+    let paths = vec![metadata.to_string_lossy().into_owned()];
+    let files: serde_json::Value = serde_json::from_str(&rustic::read_snapshot_text_files(
+        repository.to_str().unwrap(), "password", &snapshot, &paths,
+    )?)?;
+    assert_eq!(files[&paths[0]], r#"{"schemaVersion":1}"#);
+    assert_eq!(fs::read_to_string(&metadata)?, "changed on device");
+    assert!(rustic::read_snapshot_text_files(repository.to_str().unwrap(), "password", "latest", &paths).is_err());
+    assert!(rustic::read_snapshot_text_files(
+        repository.to_str().unwrap(), "password", &snapshot, &[source.join("missing.json").to_string_lossy().into_owned()],
+    ).is_err());
+    fs::remove_dir_all(root)?;
+    Ok(())
 }

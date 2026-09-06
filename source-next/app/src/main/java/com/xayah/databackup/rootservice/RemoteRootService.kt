@@ -58,11 +58,12 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.seconds
 
 object RemoteRootService {
     private const val TAG = "RemoteRootService"
-    private const val TIMEOUT_10S = 10000L
-    private const val TIMEOUT_30S = 30000L
+    private const val TIMEOUT_10S = 10
+    private const val TIMEOUT_30S = 30
 
     private fun writeToParcel(context: Context, block: (Parcel) -> Unit): ParcelFileDescriptor {
         val parcel = Parcel.obtain()
@@ -325,6 +326,21 @@ object RemoteRootService {
             return Rustic.createSnapshot(repositoryPath, password, sourcePaths, tags, callback)
         }
 
+        override fun readRusticSnapshotTextFiles(
+            repositoryPath: String,
+            password: String,
+            snapshotId: String,
+            paths: List<String>
+        ): ParcelFileDescriptor = writeToParcel(context) { parcel ->
+            parcel.writeString(Rustic.readSnapshotTextFiles(repositoryPath, password, snapshotId, paths))
+        }
+
+        override fun listRusticSnapshots(repositoryPath: String, password: String): ParcelFileDescriptor {
+            return writeToParcel(context) { parcel ->
+                parcel.writeString(Rustic.listSnapshots(repositoryPath, password))
+            }
+        }
+
         override fun restoreRusticSnapshot(repositoryPath: String, password: String, snapshotId: String, destinationPath: String) {
             Rustic.restoreSnapshot(repositoryPath, password, snapshotId, destinationPath)
         }
@@ -344,7 +360,7 @@ object RemoteRootService {
     }
 
     private suspend fun bindService(): IRemoteRootService {
-        return withTimeout(TIMEOUT_10S) {
+        return withTimeout(TIMEOUT_10S.seconds) {
             suspendCancellableCoroutine { continuation ->
                 if (mService == null) {
                     mRetries++
@@ -398,12 +414,12 @@ object RemoteRootService {
                     destroyService()
                 }
                 runCatching {
-                    withTimeout(TIMEOUT_30S) {
+                    withTimeout(TIMEOUT_30S.seconds) {
                         while (mService == null) {
                             withContext(Dispatchers.Main) {
                                 mService = runCatching { bindService() }.getOrNull()
                             }
-                            delay(1000)
+                            delay(1.seconds)
                         }
                     }
                 }
@@ -563,6 +579,24 @@ object RemoteRootService {
         callback: ICallback? = null,
     ): String {
         return getService()?.createRusticSnapshot(repositoryPath, password, sourcePaths, tags, callback) ?: ""
+    }
+
+    suspend fun readRusticSnapshotTextFiles(repositoryPath: String, password: String, snapshotId: String, paths: List<String>): String {
+        val service = checkNotNull(getService()) { "Root service is unavailable" }
+        return service.readRusticSnapshotTextFiles(repositoryPath, password, snapshotId, paths).use { pfd ->
+            var result: String? = null
+            readFromParcel(pfd) { result = it.readString() }
+            checkNotNull(result) { "Snapshot metadata is unavailable" }
+        }
+    }
+
+    suspend fun listRusticSnapshots(repositoryPath: String, password: String): String {
+        val service = checkNotNull(getService()) { "Root service is unavailable" }
+        return service.listRusticSnapshots(repositoryPath, password).use { pfd ->
+            var snapshots: String? = null
+            readFromParcel(pfd) { parcel -> snapshots = parcel.readString() }
+            checkNotNull(snapshots) { "Root service returned no snapshot metadata" }
+        }
     }
 
     suspend fun restoreRusticSnapshot(repositoryPath: String, password: String, snapshotId: String, destinationPath: String) {

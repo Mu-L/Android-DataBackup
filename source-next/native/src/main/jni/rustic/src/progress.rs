@@ -5,8 +5,14 @@ use rustic_core::{Progress, ProgressBars, ProgressType, RusticProgress};
 
 pub(crate) const PROGRESS_CALLBACK_INTERVAL: Duration = Duration::from_secs(1);
 
-// Repository code depends on this trait, not on any JNI-specific callback type.
+/// Receives byte progress updates from repository operations, independently of JNI.
+///
+/// Implementations must support calls from worker threads.
 pub trait RusticProgressCallback: Send + Sync + 'static + std::fmt::Debug {
+    /// Reports cumulative bytes processed, speed in bytes per second, and progress in `0.0..=1.0`.
+    ///
+    /// Progress is `0.0` when the total size is unknown. Speed is measured since the
+    /// previous update, or since the transfer started for the first and final updates.
     fn on_progress(&self, bytes_done: u64, speed: u64, progress: f32);
 }
 
