@@ -42,13 +42,14 @@ private const val DisabledOpacity = 0.38f
 fun Preference(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: ImageVector,
+    icon: ImageVector? = null,
     title: String,
     subtitle: String,
     subtitleShimmer: Boolean = false,
     subtitleIcon: ImageVector? = null,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     slot: @Composable (RowScope.() -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val animatedIconColor by animateColorAsState(
@@ -81,12 +82,16 @@ fun Preference(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                tint = animatedIconColor,
-                imageVector = icon,
-                contentDescription = null
-            )
+            if (leadingContent != null) {
+                leadingContent()
+            } else if (icon != null) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    tint = animatedIconColor,
+                    imageVector = icon,
+                    contentDescription = null
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)

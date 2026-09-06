@@ -539,4 +539,6 @@
     <string name="clear_filters">清除篩選條件</string>
     <string name="insecure_server_connection">允許不安全伺服器連線</string>
     <string name="insecure_server_connection_desc">使用自簽憑證時開啟此選項</string>
+    <string name="snapshots">快照</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>

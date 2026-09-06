@@ -1,20 +1,25 @@
 package com.xayah.databackup.feature.backup
 
+import android.text.format.Formatter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +37,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,14 +45,21 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.xayah.databackup.R
 import com.xayah.databackup.entity.BackupBackend
 import com.xayah.databackup.entity.BackupConfig
@@ -59,13 +72,16 @@ import com.xayah.databackup.ui.component.DialogIcon
 import com.xayah.databackup.ui.component.Preference
 import com.xayah.databackup.ui.component.PreferenceGroup
 import com.xayah.databackup.ui.component.SectionHeader
+import com.xayah.databackup.ui.component.rememberFadingEdgeState
 import com.xayah.databackup.ui.component.surfaceTopAppBarColors
 import com.xayah.databackup.ui.component.verticalFadingEdges
 import com.xayah.databackup.util.Navigator
+import com.xayah.databackup.util.TimeHelper
 import com.xayah.databackup.util.navigateSafely
 import com.xayah.databackup.util.popBackStackSafely
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.TimeZone
 
 internal const val HIDDEN_PASSWORD = "••••••••"
 private val BackupConfigContainerShape = RoundedCornerShape(28.dp)
@@ -77,6 +93,15 @@ fun BackupConfigScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val backupConfig by viewModel.backupConfig.collectAsStateWithLifecycle(null)
+    val snapshots by viewModel.snapshots.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(backupConfig?.uuid, backupConfig?.path, backupConfig?.backupBackend, lifecycleOwner) {
+        backupConfig?.let { config ->
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.refreshSnapshots(config)
+            }
+        }
+    }
     var openEditNameDialog by remember { mutableStateOf(false) }
     var openDeleteDialog by remember { mutableStateOf(false) }
 
@@ -172,32 +197,31 @@ fun BackupConfigScreen(
         Column(modifier = Modifier) {
             Spacer(modifier = Modifier.size(innerPadding.calculateTopPadding()))
 
-            val scrollState = rememberScrollState()
-            Column(
+            val listState = rememberLazyListState()
+            val fadingEdgeState = rememberFadingEdgeState(listState, label = "backupConfig")
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(scrollState)
-                    .verticalFadingEdges(scrollState),
+                    .verticalFadingEdges(fadingEdgeState),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             ) {
                 backupConfig?.let { config ->
-                    BackupConfigContent(
-                        backupConfig = config,
-                        onBackUpNow = {
-                            viewModel.selectBackup {
-                                navigator.navigateSafely(BackupSetupRoute)
-                            }
-                        },
-                    )
-                } ?: Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(64.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LoadingIndicator()
-                }
+                    item(key = "config") {
+                        BackupConfigContent(
+                            backupConfig = config,
+                            onBackUpNow = {
+                                viewModel.selectBackup {
+                                    navigator.navigateSafely(BackupSetupRoute)
+                                }
+                            },
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(0.dp))
+                    if (config.backupBackend is BackupBackend.Rustic) {
+                        backupSnapshotsItems(snapshots)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.size(innerPadding.calculateBottomPadding()))
@@ -211,9 +235,7 @@ private fun BackupConfigContent(
     onBackUpNow: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         BackupMetadataCard(backupConfig)
@@ -230,11 +252,82 @@ private fun BackupConfigContent(
             Spacer(Modifier.size(8.dp))
             Text(stringResource(R.string.back_up_now))
         }
+    }
+}
 
-        SectionHeader(
-            title = stringResource(R.string.backup_backend),
+private fun LazyListScope.backupSnapshotsItems(state: BackupSnapshotsState) {
+    val snapshots = state.snapshots.orEmpty()
+    if (snapshots.isEmpty()) return
+
+    item(key = "snapshots_header") {
+        Row(
+            modifier = Modifier
+                .animateItem()
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SectionHeader(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.snapshots),
+            )
+            Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                if (state.isLoading) {
+                    LoadingIndicator(modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+    }
+    itemsIndexed(snapshots, key = { _, snapshot -> snapshot.id }) { index, snapshot ->
+        val context = LocalContext.current
+        val configuration = LocalConfiguration.current
+        val timeZone = TimeZone.getDefault()
+        val unknown = stringResource(R.string.unknown)
+        val timestamp = remember(snapshot.createdAt, configuration, timeZone, unknown) {
+            if (snapshot.createdAt > 0) {
+                TimeHelper.formatTimestampInShort(snapshot.createdAt)
+            } else {
+                unknown
+            }
+        }
+        val addedBytes = snapshot.summary?.dataAddedPacked
+        val formattedSize = remember(addedBytes, context, configuration) {
+            addedBytes?.let { Formatter.formatFileSize(context, it) }
+        }
+        val topRadius = if (index == 0) 28.dp else 0.dp
+        val bottomRadius = if (index == snapshots.lastIndex) 28.dp else 0.dp
+        Preference(
+            modifier = Modifier
+                .animateItem()
+                .clip(
+                    RoundedCornerShape(
+                        topStart = topRadius,
+                        topEnd = topRadius,
+                        bottomStart = bottomRadius,
+                        bottomEnd = bottomRadius,
+                    )
+                ),
+            leadingContent = {
+                Text(
+                    modifier = Modifier.widthIn(min = 20.dp),
+                    text = (index + 1).toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            title = timestamp,
+            subtitle = if (formattedSize != null) {
+                stringResource(
+                    R.string.snapshot_summary,
+                    snapshot.id.take(8),
+                    formattedSize,
+                )
+            } else {
+                snapshot.id.take(8)
+            },
         )
-        BackupBackendCard(backupConfig.backupBackend)
     }
 }
 
@@ -256,30 +349,29 @@ private fun BackupMetadataCard(backupConfig: BackupConfig) {
             title = stringResource(R.string.id),
             subtitle = backupConfig.uuidString,
         )
+        BackupBackendItems(backupConfig.backupBackend)
     }
 }
 
 @Composable
-private fun BackupBackendCard(
+private fun BackupBackendItems(
     backupBackend: BackupBackend,
 ) {
     val rusticBackend = backupBackend as? BackupBackend.Rustic
     val isRustic = rusticBackend != null
-    PreferenceGroup {
-        Preference(
-            icon = ImageVector.vectorResource(
-                if (isRustic) R.drawable.ic_database_backup else R.drawable.ic_archive
-            ),
-            title = stringResource(if (isRustic) R.string.rustic else R.string.archive),
-            subtitle = stringResource(
-                if (isRustic) R.string.rustic_backup_backend_desc else R.string.archive_backup_backend_desc
-            ),
+    Preference(
+        icon = ImageVector.vectorResource(
+            if (isRustic) R.drawable.ic_database_backup else R.drawable.ic_archive
+        ),
+        title = stringResource(if (isRustic) R.string.rustic else R.string.archive),
+        subtitle = stringResource(
+            if (isRustic) R.string.rustic_backup_backend_desc else R.string.archive_backup_backend_desc
+        ),
+    )
+    rusticBackend?.let {
+        PasswordPreference(
+            password = it.password,
         )
-        rusticBackend?.let {
-            PasswordPreference(
-                password = it.password,
-            )
-        }
     }
 }
 

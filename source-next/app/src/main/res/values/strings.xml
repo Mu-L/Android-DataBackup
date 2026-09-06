@@ -554,4 +554,6 @@
     <string name="no_matching_backups">No matching backups</string>
     <string name="no_matching_backups_desc">Try adjusting your search or filters.</string>
     <string name="clear_filters">Clear filters</string>
+    <string name="snapshots">Snapshots</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>

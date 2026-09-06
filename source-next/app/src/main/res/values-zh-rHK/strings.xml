@@ -539,4 +539,6 @@
     <string name="no_matching_backups">沒有符合的備份</string>
     <string name="no_matching_backups_desc">請嘗試調整搜尋或篩選條件。</string>
     <string name="clear_filters">清除篩選條件</string>
+    <string name="snapshots">快照</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>
