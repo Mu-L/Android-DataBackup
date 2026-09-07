@@ -212,7 +212,7 @@
     <string name="args_used_by_backups">%1$s%% yedekler tarafından kullanıldı</string>
     <string name="grant_all">Hepsini yetkilendir</string>
     <string name="_continue">Devam et</string>
-    <string name="app_short_desc">Ücretsiz ve açık kaynaklı veri yedekleme uygulaması</string>
+    <string name="app_short_desc">Özgür ve açık kaynaklı veri yedekleme uygulaması</string>
     <string name="required">Gerekli</string>
     <string name="root_permission">Yetkili kullanıcı (Root) izni</string>
     <string name="root_permission_desc">Uygulama verilerini yedekleme ve geri yükleme</string>
@@ -539,4 +539,6 @@
     <string name="clear_filters">Filtreleri temizle</string>
     <string name="recent_backups">Son yedeklemeler</string>
     <string name="view_all">Hepsini göster</string>
+    <string name="snapshots">Anlık görüntüler</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>
