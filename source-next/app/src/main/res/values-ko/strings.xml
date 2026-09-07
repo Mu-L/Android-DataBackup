@@ -539,4 +539,6 @@
     <string name="clear_filters">필터 해제</string>
     <string name="recent_backups">최근 백업</string>
     <string name="view_all">모두 보기</string>
+    <string name="snapshots">스냅샷</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>
