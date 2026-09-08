@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">자료 백업</string>
+    <string name="app_name">데이터 백업</string>
     <string name="welcome_to_use">데이터 백업을 환영합니다</string>
     <string name="update_records">기록 갱신</string>
     <string name="environment_detection">환경 검출</string>
@@ -9,7 +9,7 @@
     <string name="network">네트워크</string>
     <string name="network_desc">앱 업데이트 정보, 앱 분석을 가져오는 데 사용됩니다</string>
     <string name="application">앱</string>
-    <string name="storage">저장소</string>
+    <string name="storage">스토리지</string>
     <string name="storage_desc">백업 구성, 아카이브 읽기 및 쓰기에 사용됩니다</string>
     <string name="loading">로딩</string>
     <string name="loading_failed">로딩 실패</string>
