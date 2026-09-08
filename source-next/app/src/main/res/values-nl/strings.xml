@@ -539,4 +539,6 @@
     <string name="clear_filters">Leeg filters</string>
     <string name="recent_backups">Recente backups</string>
     <string name="view_all">Toon alles</string>
+    <string name="snapshots">Opnames</string>
+    <string name="snapshot_summary">%1$s · %2$s</string>
 </resources>
