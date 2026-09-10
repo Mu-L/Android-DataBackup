@@ -541,4 +541,8 @@
     <string name="view_all">Zobacz wszystko</string>
     <string name="snapshot_summary">%1$s · %2$s</string>
     <string name="snapshots">Migawki</string>
+    <string name="delete_snapshot">Usuń migawkę</string>
+    <string name="delete_snapshot_description">Usuń migawkę %1$s (%2$s)</string>
+    <string name="confirm_delete_snapshot">Nie będzie już można przywrócić danych z tej migawki.</string>
+    <string name="delete_snapshot_failed">Nie udało się usunąć migawki. Sprawdź dostęp do repozytorium i spróbuj ponownie.</string>
 </resources>
