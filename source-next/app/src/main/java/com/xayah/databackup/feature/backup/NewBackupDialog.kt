@@ -2,14 +2,10 @@ package com.xayah.databackup.feature.backup
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -95,21 +91,12 @@ fun NewBackupDialog(
             )
         },
         confirmButton = {
-            Button(
-                enabled = uiState.isSaving.not(),
+            DialogActionButton(
+                text = stringResource(R.string.save),
+                isLoading = uiState.isSaving,
+                icon = ImageVector.vectorResource(R.drawable.ic_check),
                 onClick = { viewModel.saveNewBackup(onSaved = onDismissRequest) },
-            ) {
-                if (uiState.isSaving) {
-                    LoadingIndicator(modifier = Modifier.size(18.dp))
-                } else {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_check),
-                        contentDescription = null,
-                    )
-                }
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(stringResource(R.string.save))
-            }
+            )
         },
         dismissButton = {
             DialogDismissButton(

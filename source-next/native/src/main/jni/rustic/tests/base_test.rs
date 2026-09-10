@@ -273,3 +273,44 @@ fn reads_metadata_from_snapshot_without_restoring_live_files() -> Result<(), Box
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn deletes_only_selected_snapshot_and_preserves_shared_data() -> Result<(), Box<dyn Error>> {
+    let root = temp_path("delete-selected-snapshot")?;
+    let repository = root.join("repo");
+    let source = root.join("source");
+    let restore = root.join("restore");
+    let password = "password";
+    fs::create_dir_all(&source)?;
+    fs::write(source.join("shared.txt"), b"shared data")?;
+    let repository_path = repository.to_str().unwrap();
+    rustic::init_repository(repository_path, password)?;
+    let paths = [source.to_string_lossy().into_owned()];
+    rustic::create_snapshot(repository_path, password, &paths, &["first".into()])?;
+    rustic::create_snapshot(repository_path, password, &paths, &["second".into()])?;
+    let snapshots: serde_json::Value = serde_json::from_str(&rustic::list_snapshots(repository_path, password)?)?;
+    let selected = snapshots[0]["id"].as_str().unwrap();
+    let remaining = snapshots[1]["id"].as_str().unwrap();
+    for invalid in ["", "latest", &selected[..8], &"z".repeat(64), &"0".repeat(64)] {
+        assert!(rustic::delete_snapshot(repository_path, password, invalid).is_err());
+    }
+    assert!(rustic::delete_snapshot(repository_path, "wrong-password", selected).is_err());
+    let unchanged: serde_json::Value = serde_json::from_str(&rustic::list_snapshots(repository_path, password)?)?;
+    assert_eq!(unchanged.as_array().unwrap().len(), 2);
+    let after_delete: serde_json::Value = serde_json::from_str(&rustic::delete_snapshot(repository_path, password, selected)?)?;
+    assert_eq!(after_delete.as_array().unwrap().len(), 1);
+    assert_eq!(after_delete[0], snapshots[1]);
+    assert!(rustic::delete_snapshot(repository_path, password, selected).is_err());
+    let listed: serde_json::Value = serde_json::from_str(&rustic::list_snapshots(repository_path, password)?)?;
+    assert_eq!(listed, after_delete);
+    assert_eq!(listed.as_array().unwrap().len(), 1);
+    assert_eq!(listed[0]["id"].as_str().unwrap(), remaining);
+    rustic::restore_snapshot(repository_path, password, remaining, restore.to_str().unwrap())?;
+    let restored_file = restore.join(source.strip_prefix(Path::new("/"))?).join("shared.txt");
+    assert_eq!(fs::read(restored_file)?, b"shared data");
+    rustic::check_repository(repository_path, password)?;
+    assert_eq!(rustic::delete_snapshot(repository_path, password, remaining)?, "[]");
+    assert_eq!(rustic::list_snapshots(repository_path, password)?, "[]");
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

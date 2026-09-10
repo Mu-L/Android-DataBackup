@@ -51,10 +51,48 @@ open class BackupConfigViewModel(
     private val _snapshots = MutableStateFlow(BackupSnapshotsState())
     val snapshots = _snapshots.asStateFlow()
 
+    private val _deletingSnapshot = MutableStateFlow(false)
+    val deletingSnapshot = _deletingSnapshot.asStateFlow()
+    private val _snapshotDeleteFailed = MutableStateFlow(false)
+    val snapshotDeleteFailed = _snapshotDeleteFailed.asStateFlow()
+
+    fun clearSnapshotDeleteError() {
+        _snapshotDeleteFailed.value = false
+    }
+
+    fun deleteSnapshot(config: BackupConfig, snapshotId: String, onDeleted: () -> Unit) {
+        val backend = config.backupBackend as? BackupBackend.Rustic ?: return
+        if (_deletingSnapshot.value) return
+        _deletingSnapshot.value = true
+        _snapshotDeleteFailed.value = false
+        withLock(Dispatchers.IO) {
+            try {
+                val repositoryPath = PathHelper.getBackupRepoDir(config.path)
+                val snapshots = snapshotGateway.deleteSnapshot(repositoryPath, backend.password, snapshotId)
+                if (snapshotsRepositoryPath == repositoryPath) {
+                    _snapshots.value = BackupSnapshotsState(snapshots = snapshots, isLoading = false)
+                }
+                withContext(Dispatchers.Main) {
+                    onDeleted()
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _snapshotDeleteFailed.value = true
+            } finally {
+                _deletingSnapshot.value = false
+            }
+        }
+    }
+
     private var snapshotsRepositoryPath: String? = null
 
-    suspend fun refreshSnapshots(config: BackupConfig) = withContext(Dispatchers.IO) {
-        val backend = config.backupBackend as? BackupBackend.Rustic ?: return@withContext
+    fun refreshSnapshots(config: BackupConfig) = withLock(Dispatchers.IO) {
+        refreshSnapshotsLocked(config)
+    }
+
+    private suspend fun refreshSnapshotsLocked(config: BackupConfig) {
+        val backend = config.backupBackend as? BackupBackend.Rustic ?: return
         val repositoryPath = PathHelper.getBackupRepoDir(config.path)
         val retained = _snapshots.value.snapshots.takeIf { snapshotsRepositoryPath == repositoryPath }
         snapshotsRepositoryPath = repositoryPath

@@ -541,4 +541,8 @@
     <string name="clear_filters">清除筛选</string>
     <string name="snapshots">快照</string>
     <string name="snapshot_summary">%1$s · %2$s</string>
+    <string name="delete_snapshot">删除快照</string>
+    <string name="delete_snapshot_description">删除快照 %1$s（%2$s）</string>
+    <string name="confirm_delete_snapshot">删除后将无法从此快照恢复。</string>
+    <string name="delete_snapshot_failed">无法删除快照，请检查仓库访问权限后重试。</string>
 </resources>

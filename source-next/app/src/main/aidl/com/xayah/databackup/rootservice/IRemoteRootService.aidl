@@ -31,6 +31,7 @@ interface IRemoteRootService {
     void validateRusticRepository(String repositoryPath, String password);
     String createRusticSnapshot(String repositoryPath, String password, in List<String> sourcePaths, in List<String> tags, ICallback callback);
     ParcelFileDescriptor readRusticSnapshotTextFiles(String repositoryPath, String password, String snapshotId, in List<String> paths);
+    ParcelFileDescriptor deleteRusticSnapshot(String repositoryPath, String password, String snapshotId);
     ParcelFileDescriptor listRusticSnapshots(String repositoryPath, String password);
     void restoreRusticSnapshot(String repositoryPath, String password, String snapshotId, String destinationPath);
     void checkRusticRepository(String repositoryPath, String password);

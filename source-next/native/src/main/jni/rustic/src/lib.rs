@@ -13,6 +13,6 @@ pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 pub use progress::RusticProgressCallback;
 pub use repository::{
-    check_repository, create_snapshot, create_snapshot_with_progress, init_repository,
+    check_repository, create_snapshot, create_snapshot_with_progress, delete_snapshot, init_repository,
     list_snapshots, read_snapshot_text_files, repository_exists, restore_snapshot, validate_repository,
 };

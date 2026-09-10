@@ -541,4 +541,8 @@
     <string name="insecure_server_connection_desc">使用自簽憑證時開啟此選項</string>
     <string name="snapshots">快照</string>
     <string name="snapshot_summary">%1$s · %2$s</string>
+    <string name="delete_snapshot">刪除快照</string>
+    <string name="delete_snapshot_description">刪除快照 %1$s（%2$s）</string>
+    <string name="confirm_delete_snapshot">刪除後將無法從此快照復原。</string>
+    <string name="delete_snapshot_failed">無法刪除快照，請檢查儲存庫存取權限後再試一次。</string>
 </resources>

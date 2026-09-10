@@ -6,7 +6,7 @@ use jni::sys::jboolean;
 use crate::error::NativeError;
 use crate::jni_progress::JniProgressCallback;
 use crate::repository::{
-    check_repository, create_snapshot, create_snapshot_with_progress, init_repository,
+    check_repository, create_snapshot, create_snapshot_with_progress, delete_snapshot, init_repository,
     list_snapshots, read_snapshot_text_files, repository_exists, restore_snapshot, validate_repository,
 };
 
@@ -185,4 +185,25 @@ pub extern "system" fn Java_com_xayah_libnative_Rustic_nativeReadSnapshotTextFil
         ).map_err(NativeError::from)?;
         env.new_string(files).map_err(NativeError::from)
     }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_xayah_libnative_Rustic_nativeDeleteSnapshot<'local>(
+    mut unowned_env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    repository_path: JString<'local>,
+    password: JString<'local>,
+    snapshot_id: JString<'local>,
+) -> JString<'local> {
+    unowned_env
+        .with_env(|env| -> Result<JString<'local>, NativeError> {
+            let snapshots = delete_snapshot(
+                &repository_path.to_string(),
+                &password.to_string(),
+                &snapshot_id.to_string(),
+            )
+            .map_err(NativeError::from)?;
+            env.new_string(snapshots).map_err(NativeError::from)
+        })
+        .resolve::<ThrowRuntimeExAndDefault>()
 }

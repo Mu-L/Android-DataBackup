@@ -73,8 +73,22 @@ class RusticBackupGateway {
         )
     }
 
+    suspend fun deleteSnapshot(repositoryPath: String, password: String, snapshotId: String): List<RusticSnapshot> {
+        // Invalidate before mutation so a failed cache write cannot resurrect a deleted snapshot.
+        val cachePath = PathHelper.getRusticSnapshotsCacheFile(PathHelper.getParentPath(repositoryPath))
+        if (RemoteRootService.exists(cachePath)) {
+            check(RemoteRootService.deleteRecursively(cachePath)) { "Failed to invalidate snapshot cache" }
+        }
+        val serialized = RemoteRootService.deleteRusticSnapshot(repositoryPath, password, snapshotId)
+        return cacheSnapshots(repositoryPath, serialized)
+    }
+
     suspend fun listSnapshots(repositoryPath: String, password: String): List<RusticSnapshot> {
         val serialized = RemoteRootService.listRusticSnapshots(repositoryPath = repositoryPath, password = password)
+        return cacheSnapshots(repositoryPath, serialized)
+    }
+
+    private suspend fun cacheSnapshots(repositoryPath: String, serialized: String): List<RusticSnapshot> {
         val snapshots = requireNotNull(snapshotListAdapter.fromJson(serialized)) { "Missing snapshot list" }
         try {
             RemoteRootService.writeText(

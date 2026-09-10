@@ -335,6 +335,12 @@ object RemoteRootService {
             parcel.writeString(Rustic.readSnapshotTextFiles(repositoryPath, password, snapshotId, paths))
         }
 
+        override fun deleteRusticSnapshot(repositoryPath: String, password: String, snapshotId: String): ParcelFileDescriptor {
+            return writeToParcel(context) { parcel ->
+                parcel.writeString(Rustic.deleteSnapshot(repositoryPath, password, snapshotId))
+            }
+        }
+
         override fun listRusticSnapshots(repositoryPath: String, password: String): ParcelFileDescriptor {
             return writeToParcel(context) { parcel ->
                 parcel.writeString(Rustic.listSnapshots(repositoryPath, password))
@@ -587,6 +593,15 @@ object RemoteRootService {
             var result: String? = null
             readFromParcel(pfd) { result = it.readString() }
             checkNotNull(result) { "Snapshot metadata is unavailable" }
+        }
+    }
+
+    suspend fun deleteRusticSnapshot(repositoryPath: String, password: String, snapshotId: String): String {
+        val service = checkNotNull(getService()) { "Root service is unavailable" }
+        return service.deleteRusticSnapshot(repositoryPath, password, snapshotId).use { pfd ->
+            var snapshots: String? = null
+            readFromParcel(pfd) { parcel -> snapshots = parcel.readString() }
+            checkNotNull(snapshots) { "Root service returned no snapshot metadata" }
         }
     }
 

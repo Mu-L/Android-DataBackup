@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -84,19 +85,24 @@ fun DialogActionButton(
     enabled: Boolean = true,
     icon: ImageVector? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
+    isLoading: Boolean = false,
 ) {
     Button(
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled && !isLoading,
         colors = colors,
         onClick = onClick,
     ) {
-        if (icon != null) {
+        if (isLoading) {
+            LoadingIndicator(modifier = Modifier.size(DialogActionIconSize))
+        } else if (icon != null) {
             Icon(
                 modifier = Modifier.size(DialogActionIconSize),
                 imageVector = icon,
                 contentDescription = null,
             )
+        }
+        if (isLoading || icon != null) {
             Spacer(modifier = Modifier.width(8.dp))
         }
         Text(text = text)
@@ -126,6 +132,7 @@ fun DialogDestructiveButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: ImageVector? = null,
+    isLoading: Boolean = false,
 ) {
     DialogActionButton(
         text = text,
@@ -133,6 +140,7 @@ fun DialogDestructiveButton(
         modifier = modifier,
         enabled = enabled,
         icon = icon,
+        isLoading = isLoading,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError,

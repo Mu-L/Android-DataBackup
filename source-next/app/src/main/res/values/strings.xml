@@ -556,4 +556,8 @@
     <string name="clear_filters">Clear filters</string>
     <string name="snapshots">Snapshots</string>
     <string name="snapshot_summary">%1$s · %2$s</string>
+    <string name="delete_snapshot">Delete snapshot</string>
+    <string name="delete_snapshot_description">Delete snapshot %1$s (%2$s)</string>
+    <string name="confirm_delete_snapshot">You will no longer be able to restore from this snapshot.</string>
+    <string name="delete_snapshot_failed">Could not delete the snapshot. Check repository access and try again.</string>
 </resources>

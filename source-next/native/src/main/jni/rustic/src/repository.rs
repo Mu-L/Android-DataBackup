@@ -1,4 +1,5 @@
 use rustic_backend::BackendOptions;
+use rustic_core::repofile::SnapshotFile;
 use rustic_core::{
     BackupOptions, CheckOptions, ConfigOptions, Credentials, KeyOptions, LocalDestination,
     LsOptions, OpenStatus, PathList, Repository, RepositoryBackends, RepositoryOptions,
@@ -116,6 +117,22 @@ pub fn restore_snapshot(
     Ok(())
 }
 
+/// Removes exactly one snapshot and returns the remaining metadata.
+/// Shared data is retained until repository pruning.
+pub fn delete_snapshot(repository_path: &str, password: &str, snapshot_id: &str) -> Result<String> {
+    if snapshot_id.len() != 64 || !snapshot_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("A full hexadecimal snapshot ID is required".into());
+    }
+    let repo = open_repository(repository_path, password)?;
+    let snapshot = repo.get_snapshot_from_str(snapshot_id, |_| true)?;
+    let mut snapshots = repo.get_all_snapshots()?;
+    snapshots.retain(|entry| entry.id != snapshot.id);
+    // Prepare the response before deleting: metadata errors must not report a completed deletion as failed.
+    let serialized = serialize_snapshots(snapshots)?;
+    repo.delete_snapshots(&[snapshot.id])?;
+    Ok(serialized)
+}
+
 /// Returns snapshot metadata as a JSON array, ordered from newest to oldest.
 ///
 /// Each object includes `created_at` as milliseconds since the Unix epoch.
@@ -123,7 +140,10 @@ pub fn list_snapshots(repository_path: &str, password: &str) -> Result<String> {
     // Snapshot metadata lives in dedicated snapshot files. Loading the repository's
     // complete data index here makes a metadata-only list operation unnecessarily slow.
     let repo = open_repository(repository_path, password)?;
-    let mut snapshots = repo.get_all_snapshots()?;
+    serialize_snapshots(repo.get_all_snapshots()?)
+}
+
+fn serialize_snapshots(mut snapshots: Vec<SnapshotFile>) -> Result<String> {
     snapshots.sort_by(|left, right| right.time.cmp(&left.time));
 
     let snapshots = snapshots
