@@ -541,4 +541,8 @@
     <string name="view_all">Toon alles</string>
     <string name="snapshots">Opnames</string>
     <string name="snapshot_summary">%1$s · %2$s</string>
+    <string name="delete_snapshot">Verwijder opname</string>
+    <string name="delete_snapshot_description">Verwijder opname %1$s (%2$s)</string>
+    <string name="confirm_delete_snapshot">U zal niet meer kunnen herstellen vanaf deze opname.</string>
+    <string name="delete_snapshot_failed">Kon de opname niet verwijderen. Controleer de toegang tot de opslagruimte en probeer het opnieuw.</string>
 </resources>
