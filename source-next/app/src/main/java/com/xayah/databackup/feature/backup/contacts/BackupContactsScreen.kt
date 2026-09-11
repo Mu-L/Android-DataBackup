@@ -3,30 +3,21 @@ package com.xayah.databackup.feature.backup.contacts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,20 +36,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.xayah.databackup.util.Navigator
 import com.xayah.databackup.R
-import com.xayah.databackup.database.entity.ContactDeserialized
 import com.xayah.databackup.ui.component.SearchTextField
-import com.xayah.databackup.ui.component.surfaceTopAppBarColors
 import com.xayah.databackup.ui.component.rememberFadingEdgeState
+import com.xayah.databackup.ui.component.selection.ContactListItem
+import com.xayah.databackup.ui.component.surfaceTopAppBarColors
 import com.xayah.databackup.ui.component.verticalFadingEdges
-import com.xayah.databackup.util.LaunchedEffect
+import com.xayah.databackup.util.Navigator
 import com.xayah.databackup.util.popBackStackSafely
-import kotlinx.coroutines.Dispatchers
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -200,7 +188,7 @@ fun BackupContactsScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp),
                                 contact = contact,
-                                viewModel = viewModel,
+                                onCheckedChange = { viewModel.selectContact(contact.id, it) },
                             )
                         }
 
@@ -210,61 +198,6 @@ fun BackupContactsScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ContactListItem(
-    modifier: Modifier,
-    contact: ContactDeserialized,
-    viewModel: ContactsViewModel,
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(16.dp),
-        onClick = {
-            viewModel.selectContact(contact.id, contact.selected.not())
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = contact.displayName.first().toString(),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = contact.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Checkbox(
-                checked = contact.selected,
-                onCheckedChange = {
-                    viewModel.selectContact(contact.id, it)
-                }
-            )
         }
     }
 }

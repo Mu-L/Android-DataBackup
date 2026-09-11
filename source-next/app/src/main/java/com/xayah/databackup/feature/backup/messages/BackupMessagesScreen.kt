@@ -3,25 +3,16 @@ package com.xayah.databackup.feature.backup.messages
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -30,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -49,22 +39,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.xayah.databackup.util.Navigator
 import com.xayah.databackup.R
-import com.xayah.databackup.database.entity.MmsDeserialized
-import com.xayah.databackup.database.entity.SmsDeserialized
 import com.xayah.databackup.ui.component.SearchTextField
-import com.xayah.databackup.ui.component.surfaceTopAppBarColors
 import com.xayah.databackup.ui.component.rememberFadingEdgeState
+import com.xayah.databackup.ui.component.selection.MmsListItem
+import com.xayah.databackup.ui.component.selection.SmsListItem
+import com.xayah.databackup.ui.component.surfaceTopAppBarColors
 import com.xayah.databackup.ui.component.verticalFadingEdges
-import com.xayah.databackup.util.LaunchedEffect
+import com.xayah.databackup.util.Navigator
 import com.xayah.databackup.util.popBackStackSafely
-import kotlinx.coroutines.Dispatchers
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -241,7 +227,7 @@ fun BackupMessagesScreen(
                                                     .fillMaxWidth()
                                                     .padding(horizontal = 16.dp),
                                                 sms = sms,
-                                                viewModel = viewModel,
+                                                onCheckedChange = { viewModel.selectSms(sms.id, it) },
                                             )
                                         }
 
@@ -267,7 +253,7 @@ fun BackupMessagesScreen(
                                                     .fillMaxWidth()
                                                     .padding(horizontal = 16.dp),
                                                 mms = mms,
-                                                viewModel = viewModel,
+                                                onCheckedChange = { viewModel.selectMms(mms.id, it) },
                                             )
                                         }
 
@@ -281,154 +267,6 @@ fun BackupMessagesScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun SmsListItem(
-    modifier: Modifier,
-    sms: SmsDeserialized,
-    viewModel: MessagesViewModel,
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(16.dp),
-        onClick = {
-            viewModel.selectSms(sms.id, sms.selected.not())
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_user_round),
-                        contentDescription = null
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = sms.address,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = sms.body,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Checkbox(
-                checked = sms.selected,
-                onCheckedChange = {
-                    viewModel.selectSms(sms.id, it)
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun MmsListItem(
-    modifier: Modifier,
-    mms: MmsDeserialized,
-    viewModel: MessagesViewModel,
-) {
-    val bodyTextStyle = MaterialTheme.typography.bodySmall
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(16.dp),
-        onClick = {
-            viewModel.selectMms(mms.id, mms.selected.not())
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_user_round),
-                        contentDescription = null
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = mms.address,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                val inlineContent = remember {
-                    mapOf(
-                        mms.iconMod to InlineTextContent(
-                            Placeholder(
-                                width = bodyTextStyle.fontSize,
-                                height = bodyTextStyle.fontSize,
-                                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
-                            )
-                        ) {
-                            Icon(
-                                modifier = Modifier.fillMaxSize(),
-                                tint = MaterialTheme.colorScheme.secondary,
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_paperclip),
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
-                if (mms.body.isNotEmpty()) {
-                    Text(
-                        inlineContent = inlineContent,
-                        text = mms.body,
-                        style = bodyTextStyle,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Checkbox(
-                checked = mms.selected,
-                onCheckedChange = {
-                    viewModel.selectMms(mms.id, it)
-                }
-            )
         }
     }
 }

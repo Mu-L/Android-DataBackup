@@ -23,8 +23,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xayah.databackup.R
 
+private const val DisabledOpacity = 0.38f
+
 @Composable
-fun SelectableChip(selected: Boolean, icon: AnimatedImageVector, text: String, onCheckedChange: (Boolean) -> Unit) {
+fun SelectableChip(selected: Boolean, icon: AnimatedImageVector, text: String, enabled: Boolean = true, onCheckedChange: (Boolean) -> Unit) {
     val animatedCorner by animateDpAsState(
         targetValue = if (selected) 18.dp else 8.dp,
         label = "animatedCorner"
@@ -46,6 +48,7 @@ fun SelectableChip(selected: Boolean, icon: AnimatedImageVector, text: String, o
         atEnd = selected.not()
     )
     Surface(
+        enabled = enabled,
         shape = RoundedCornerShape(animatedCorner),
         color = animatedSurfaceColor,
         onClick = { onCheckedChange.invoke(selected) }
@@ -60,7 +63,7 @@ fun SelectableChip(selected: Boolean, icon: AnimatedImageVector, text: String, o
             Icon(
                 modifier = Modifier.size(18.dp),
                 painter = if (selected) animatedCheckIcon else animatedIcon,
-                tint = animatedOnSurfaceColor,
+                tint = animatedOnSurfaceColor.copy(alpha = if (enabled) 1f else DisabledOpacity),
                 contentDescription = null
             )
 
@@ -69,7 +72,7 @@ fun SelectableChip(selected: Boolean, icon: AnimatedImageVector, text: String, o
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = animatedOnSurfaceColor
+                color = animatedOnSurfaceColor.copy(alpha = if (enabled) 1f else DisabledOpacity)
             )
         }
     }

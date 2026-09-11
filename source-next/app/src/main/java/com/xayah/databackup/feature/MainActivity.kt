@@ -5,11 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,6 +46,8 @@ import com.xayah.databackup.ui.component.DataBackupDialog
 import com.xayah.databackup.ui.component.DialogDestructiveButton
 import com.xayah.databackup.ui.component.DialogDismissButton
 import com.xayah.databackup.ui.component.DialogIcon
+import com.xayah.databackup.ui.component.backwardNavigationTransition
+import com.xayah.databackup.ui.component.forwardNavigationTransition
 import com.xayah.databackup.ui.theme.DataBackupTheme
 import com.xayah.databackup.util.FirstLaunch
 import com.xayah.databackup.util.LogHelper
@@ -164,33 +161,9 @@ class MainActivity : ComponentActivity() {
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator(),
                         ),
-                        transitionSpec = {
-                            slideInHorizontally(
-                                initialOffsetX = { it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            ) togetherWith slideOutHorizontally(
-                                targetOffsetX = { -it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            )
-                        },
-                        popTransitionSpec = {
-                            slideInHorizontally(
-                                initialOffsetX = { -it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            ) togetherWith slideOutHorizontally(
-                                targetOffsetX = { it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            )
-                        },
-                        predictivePopTransitionSpec = {
-                            slideInHorizontally(
-                                initialOffsetX = { -it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            ) togetherWith slideOutHorizontally(
-                                targetOffsetX = { it },
-                                animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
-                            )
-                        },
+                        transitionSpec = { forwardNavigationTransition() },
+                        popTransitionSpec = { backwardNavigationTransition() },
+                        predictivePopTransitionSpec = { backwardNavigationTransition() },
                         entryProvider = entryProvider {
                             entry<MainNavigationRoute> {
                                 MainNavigationHost(navigator)
