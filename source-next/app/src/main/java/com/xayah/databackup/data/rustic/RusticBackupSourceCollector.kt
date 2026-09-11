@@ -33,6 +33,7 @@ class RusticBackupSourceCollector(
                 exists = mGateway::exists,
             )
         }
+        val usersMap = if (appPlans.isEmpty()) emptyMap() else mGateway.getUsersMap()
         val included = appPlans.flatMap { it.included }.toMutableList()
         val skipped = appPlans.flatMap { it.skipped }.toMutableList()
 
@@ -55,9 +56,17 @@ class RusticBackupSourceCollector(
                 RusticAppManifest(
                     packageName = plan.packageName,
                     userId = plan.userId,
+                    userName = usersMap[plan.userId] ?: plan.userId.toString(),
                     label = plan.info.label,
                     versionName = plan.info.versionName,
                     versionCode = plan.info.versionCode,
+                    flags = plan.info.flags,
+                    firstInstallTime = plan.info.firstInstallTime,
+                    lastUpdateTime = plan.info.lastUpdateTime,
+                    apkBytes = plan.storage.apkBytes,
+                    internalDataBytes = plan.storage.internalDataBytes,
+                    externalDataBytes = plan.storage.externalDataBytes,
+                    additionalDataBytes = plan.storage.additionalDataBytes,
                     apk = plan.option.apk,
                     internalData = plan.option.internalData,
                     externalData = plan.option.externalData,

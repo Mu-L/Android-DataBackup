@@ -560,4 +560,5 @@
     <string name="delete_snapshot_description">Delete snapshot %1$s (%2$s)</string>
     <string name="confirm_delete_snapshot">You will no longer be able to restore from this snapshot.</string>
     <string name="delete_snapshot_failed">Could not delete the snapshot. Check repository access and try again.</string>
+    <string name="restore_snapshot_load_failed">Could not read this snapshot. Check the repository and try again.</string>
 </resources>

@@ -26,6 +26,7 @@ import com.xayah.databackup.util.PathHelper
 
 /** Keys identify records within this snapshot, independently of device database IDs. */
 data class RusticRestoreInventory(
+    val usersMap: Map<Int, String> = emptyMap(),
     val apps: Map<String, App> = emptyMap(),
     val files: Map<String, String> = emptyMap(),
     val networks: Map<String, NetworkUnmarshalled> = emptyMap(),
@@ -77,6 +78,7 @@ class RusticRestoreInventoryReader {
             .distinctBy { it.packageName to it.userId }
             .associateBy { RestoreRecordId.app(it.userId, it.packageName) }
         return RusticRestoreInventory(
+            usersMap = apps.values.associate { it.userId to it.userName },
             apps = apps.mapValues { (_, app) ->
                 App(
                     packageName = app.packageName,
@@ -84,10 +86,18 @@ class RusticRestoreInventoryReader {
                     info = Info(
                         label = app.label.ifBlank { app.packageName },
                         versionName = app.versionName,
+                        flags = app.flags,
+                        firstInstallTime = app.firstInstallTime,
+                        lastUpdateTime = app.lastUpdateTime,
                         versionCode = app.versionCode
                     ),
                     option = Option(apk = false, internalData = false, externalData = false, additionalData = false),
-                    storage = Storage(),
+                    storage = Storage(
+                        apkBytes = app.apkBytes,
+                        internalDataBytes = app.internalDataBytes,
+                        externalDataBytes = app.externalDataBytes,
+                        additionalDataBytes = app.additionalDataBytes,
+                    ),
                 )
             },
             availableAppParts = apps.mapValues { (_, app) ->

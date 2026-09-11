@@ -35,9 +35,11 @@ private fun filterSearchText(sms: SmsDeserialized, searchText: String) =
 
 private fun filterSearchText(mms: MmsDeserialized, searchText: String) =
     searchText.isEmpty()
-            || mms.body.toString().contains(searchText.lowercase())
+            || mms.body.toString().lowercase().contains(searchText.lowercase())
 
 fun Iterable<App>.filterApp(searchText: String): List<App> = filter { filterSearchText(it, searchText) }
+
+fun <K> Map<K, App>.filterApp(searchText: String): Map<K, App> = filterValues { filterSearchText(it, searchText) }
 
 fun Iterable<App>.filterApp(userId: Int, filterUserApps: Boolean, filterSystemApps: Boolean): List<App> = filter {
     filterUserId(it, userId)
@@ -90,3 +92,13 @@ fun Iterable<SmsDeserialized>.filterSms(searchText: String): List<SmsDeserialize
 fun Iterable<MmsDeserialized>.filterMms(searchText: String): List<MmsDeserialized> = filter {
     filterSearchText(it, searchText)
 }
+
+fun <K> Map<K, NetworkUnmarshalled>.filterNetwork(searchText: String): Map<K, NetworkUnmarshalled> = filterValues { filterSearchText(it, searchText) }
+
+fun <K> Map<K, ContactDeserialized>.filterContact(searchText: String): Map<K, ContactDeserialized> = filterValues { filterSearchText(it, searchText) }
+
+fun <K> Map<K, CallLogDeserialized>.filterCallLog(searchText: String): Map<K, CallLogDeserialized> = filterValues { filterSearchText(it, searchText) }
+
+fun <K> Map<K, SmsDeserialized>.filterSms(searchText: String): Map<K, SmsDeserialized> = filterValues { filterSearchText(it, searchText) }
+
+fun <K> Map<K, MmsDeserialized>.filterMms(searchText: String): Map<K, MmsDeserialized> = filterValues { filterSearchText(it, searchText) }

@@ -56,6 +56,7 @@ class RusticAppSourcePlanner {
             userId = app.userId,
             info = app.info.copy(),
             option = app.option.copy(),
+            storage = app.storage.copy(),
             included = included,
             skipped = skipped,
         )

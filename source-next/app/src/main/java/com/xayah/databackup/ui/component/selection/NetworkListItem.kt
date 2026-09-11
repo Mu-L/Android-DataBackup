@@ -33,6 +33,7 @@ fun NetworkListItem(
     modifier: Modifier,
     context: Context,
     network: NetworkUnmarshalled,
+    selected: Boolean = network.selected,
     onCheckedChange: (Boolean) -> Unit,
     showPassword: Boolean,
 ) {
@@ -52,7 +53,7 @@ fun NetworkListItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(16.dp),
         onClick = {
-            onCheckedChange(network.selected.not())
+            onCheckedChange(selected.not())
         }
     ) {
         Row(
@@ -90,7 +91,7 @@ fun NetworkListItem(
                 )
             }
             Checkbox(
-                checked = network.selected,
+                checked = selected,
                 onCheckedChange = { onCheckedChange(it) }
             )
         }

@@ -21,6 +21,8 @@ class RusticBackupGateway {
         return requireNotNull(Moshi.Builder().build().adapter<Map<String, String>>().fromJson(serialized))
     }
 
+    suspend fun getUsersMap(): Map<Int, String> = RemoteRootService.getUsers().associate { it.id to it.name }
+
     suspend fun exists(path: String): Boolean = RemoteRootService.exists(path)
 
     suspend fun isDirectoryEmpty(path: String): Boolean = RemoteRootService.listFilePaths(path, listFiles = true, listDirs = true).isEmpty()

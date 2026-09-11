@@ -9,6 +9,7 @@ import com.xayah.databackup.database.entity.Info
 import com.xayah.databackup.database.entity.Mms
 import com.xayah.databackup.database.entity.Network
 import com.xayah.databackup.database.entity.Option
+import com.xayah.databackup.database.entity.Storage
 import com.xayah.databackup.database.entity.Sms
 import com.xayah.databackup.entity.BackupConfig
 
@@ -43,6 +44,7 @@ data class RusticAppSourcePlan(
     val userId: Int,
     val info: Info,
     val option: Option,
+    val storage: Storage,
     val included: List<RusticSourcePath>,
     val skipped: List<RusticSkippedSource>,
 )
