@@ -29,7 +29,7 @@ interface IRemoteRootService {
     void initRusticRepository(String repositoryPath, String password);
     boolean rusticRepositoryExists(String repositoryPath);
     void validateRusticRepository(String repositoryPath, String password);
-    String createRusticSnapshot(String repositoryPath, String password, in List<String> sourcePaths, in List<String> tags, ICallback callback);
+    String createRusticSnapshot(String repositoryPath, String password, in Map<String, String> sourcePaths, in List<String> tags, ICallback callback);
     ParcelFileDescriptor readRusticSnapshotTextFiles(String repositoryPath, String password, String snapshotId, in List<String> paths);
     ParcelFileDescriptor deleteRusticSnapshot(String repositoryPath, String password, String snapshotId);
     ParcelFileDescriptor listRusticSnapshots(String repositoryPath, String password);

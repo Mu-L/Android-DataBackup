@@ -88,9 +88,13 @@ class RusticBackupSourceCollector(
             mGateway.writeText(destination, stagedFile.content)
         }
 
-        // Add the staging directory so generated metadata and structured data are included in the snapshot.
-        val sourcePaths = (included.map { it.path } + stagingPath).distinct()
-        return RusticCollectedSources(sourcePaths, stagingPath, skipped.distinctBy { it.path })
+        // Ordinary sources keep their paths; generated metadata uses a fixed snapshot directory.
+        val sourcePaths = included.associate { it.path to it.path }
+        return RusticCollectedSources(
+            sourcePaths = sourcePaths + (stagingPath to PathHelper.getRusticSnapshotMetadataDir()),
+            includedCount = sourcePaths.size,
+            skippedSources = skipped.distinctBy { it.path },
+        )
     }
 
     /** Adds an existing non-blank path to [included], or records a missing path in [skipped]. */

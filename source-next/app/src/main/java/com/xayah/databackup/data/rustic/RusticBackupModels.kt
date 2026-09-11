@@ -65,8 +65,8 @@ data class RusticStagedFile(
 )
 
 data class RusticCollectedSources(
-    val sourcePaths: List<String>,
-    val stagingPath: String,
+    val sourcePaths: Map<String, String>,
+    val includedCount: Int,
     val skippedSources: List<RusticSkippedSource>,
 )
 

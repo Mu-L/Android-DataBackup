@@ -319,7 +319,7 @@ object RemoteRootService {
         override fun createRusticSnapshot(
             repositoryPath: String,
             password: String,
-            sourcePaths: List<String>,
+            sourcePaths: Map<String, String>,
             tags: List<String>,
             callback: ICallback?
         ): String {
@@ -580,7 +580,7 @@ object RemoteRootService {
     suspend fun createRusticSnapshot(
         repositoryPath: String,
         password: String,
-        sourcePaths: List<String>,
+        sourcePaths: Map<String, String>,
         tags: List<String> = emptyList(),
         callback: ICallback? = null,
     ): String {

@@ -23,7 +23,14 @@ data class RusticSnapshot(
     val delete: Any? = null,
     val summary: RusticSnapshotSummary? = null,
     val description: String? = null,
-)
+) {
+    companion object {
+        private const val BACKUP_TAG = "databackup"
+        private const val CONFIG_TAG_PREFIX = "$BACKUP_TAG:config:"
+
+        fun createBackupTags(configUuid: String): List<String> = listOf(BACKUP_TAG, "$CONFIG_TAG_PREFIX$configUuid")
+    }
+}
 
 @JsonClass(generateAdapter = true)
 data class RusticSnapshotSummary(

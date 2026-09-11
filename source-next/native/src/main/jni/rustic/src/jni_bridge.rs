@@ -3,11 +3,13 @@ use jni::errors::ThrowRuntimeExAndDefault;
 use jni::objects::{JObject, JObjectArray, JString};
 use jni::sys::jboolean;
 
+use crate::SourceMapping;
 use crate::error::NativeError;
 use crate::jni_progress::JniProgressCallback;
 use crate::repository::{
-    check_repository, create_snapshot, create_snapshot_with_progress, delete_snapshot, init_repository,
-    list_snapshots, read_snapshot_text_files, repository_exists, restore_snapshot, validate_repository,
+    check_repository, create_snapshot, create_snapshot_with_progress, delete_snapshot,
+    init_repository, list_snapshots, read_snapshot_text_files, repository_exists, restore_snapshot,
+    validate_repository,
 };
 
 #[unsafe(no_mangle)]
@@ -72,15 +74,30 @@ pub extern "system" fn Java_com_xayah_libnative_Rustic_nativeCreateSnapshot<'loc
     repository_path: JString<'local>,
     password: JString<'local>,
     source_paths: JObjectArray<'local, JString<'local>>,
+    snapshot_paths: JObjectArray<'local, JString<'local>>,
     tags: JObjectArray<'local, JString<'local>>,
     callback: JObject<'local>,
 ) -> JString<'local> {
     unowned_env
         .with_env(|env| -> Result<JString<'local>, NativeError> {
             let source_paths = string_array_to_vec(env, &source_paths)?;
+            let snapshot_paths = string_array_to_vec(env, &snapshot_paths)?;
             let tags = string_array_to_vec(env, &tags)?;
             let repository_path = repository_path.to_string();
             let password = password.to_string();
+            if source_paths.len() != snapshot_paths.len() {
+                return Err(NativeError::from(Box::<dyn std::error::Error>::from(
+                    "Source and snapshot path counts differ",
+                )));
+            }
+            let source_paths: Vec<_> = source_paths
+                .into_iter()
+                .zip(snapshot_paths)
+                .map(|(source_path, snapshot_path)| SourceMapping {
+                    source_path,
+                    snapshot_path,
+                })
+                .collect();
             let snapshot_id = if callback.as_raw().is_null() {
                 create_snapshot(&repository_path, &password, &source_paths, &tags)
                     .map_err(NativeError::from)?
@@ -178,13 +195,19 @@ pub extern "system" fn Java_com_xayah_libnative_Rustic_nativeReadSnapshotTextFil
     snapshot_id: JString<'local>,
     paths: JObjectArray<'local, JString<'local>>,
 ) -> JString<'local> {
-    unowned_env.with_env(|env| -> Result<JString<'local>, NativeError> {
-        let paths = string_array_to_vec(env, &paths)?;
-        let files = read_snapshot_text_files(
-            &repository_path.to_string(), &password.to_string(), &snapshot_id.to_string(), &paths,
-        ).map_err(NativeError::from)?;
-        env.new_string(files).map_err(NativeError::from)
-    }).resolve::<ThrowRuntimeExAndDefault>()
+    unowned_env
+        .with_env(|env| -> Result<JString<'local>, NativeError> {
+            let paths = string_array_to_vec(env, &paths)?;
+            let files = read_snapshot_text_files(
+                &repository_path.to_string(),
+                &password.to_string(),
+                &snapshot_id.to_string(),
+                &paths,
+            )
+            .map_err(NativeError::from)?;
+            env.new_string(files).map_err(NativeError::from)
+        })
+        .resolve::<ThrowRuntimeExAndDefault>()
 }
 
 #[unsafe(no_mangle)]

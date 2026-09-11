@@ -14,8 +14,6 @@ class RusticBackupCoordinator(
 ) {
     companion object {
         private const val TAG = "RusticBackupCoordinator"
-        private const val SNAPSHOT_TAG = "databackup"
-        private const val SNAPSHOT_CONFIG_TAG_PREFIX = "$SNAPSHOT_TAG:config:"
     }
 
     suspend fun start(onEvent: (RusticBackupEvent) -> Unit): RusticBackupResult {
@@ -37,10 +35,7 @@ class RusticBackupCoordinator(
                 repositoryPath = repositoryPath,
                 password = backend.password,
                 sourcePaths = collected.sourcePaths,
-                tags = listOf(
-                    SNAPSHOT_TAG,
-                    "$SNAPSHOT_CONFIG_TAG_PREFIX${selection.config.uuidString}",
-                )
+                tags = RusticSnapshot.createBackupTags(selection.config.uuidString),
             ) { bytesDone, speed, progress ->
                 onEvent(RusticBackupEvent.Progress(bytesDone, speed, progress))
             }.takeIf { it.isNotBlank() } ?: throw IllegalStateException("Rustic returned an empty snapshot ID.")
@@ -52,7 +47,7 @@ class RusticBackupCoordinator(
                 throw IllegalStateException("Snapshot $snapshotId was created, but backup metadata could not be finalized.", error)
             }
 
-            return RusticBackupResult(snapshotId, collected.sourcePaths.size, collected.skippedSources)
+            return RusticBackupResult(snapshotId, collected.includedCount, collected.skippedSources)
         } finally {
             // Staged metadata is temporary and must not survive a completed or failed backup.
             if (mGateway.deleteRecursively(stagingPath).not()) {

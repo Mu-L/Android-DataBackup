@@ -41,6 +41,7 @@ object PathHelper {
     private const val CALL_LOGS_FILE_NAME = "call_logs.json"
     private const val MESSAGES_SMS_FILE_NAME = "messages_sms.json"
     private const val MESSAGES_MMS_FILE_NAME = "messages_mms.json"
+    private const val RUSTIC_SNAPSHOT_METADATA_DIR = ".databackup"
     private const val RUSTIC_MANIFEST_FILE_NAME = "manifest.json"
     private const val RUSTIC_SNAPSHOTS_CACHE_FILE_NAME = ".snapshots"
 
@@ -102,6 +103,8 @@ object PathHelper {
     fun getBackupMessagesSmsConfigFileRelativePath(): String = "$SUBDIR_MESSAGES/$MESSAGES_SMS_FILE_NAME"
     fun getBackupMessagesMmsConfigFileRelativePath(): String = "$SUBDIR_MESSAGES/$MESSAGES_MMS_FILE_NAME"
     fun getRusticManifestFileRelativePath(): String = RUSTIC_MANIFEST_FILE_NAME
+    fun getRusticSnapshotMetadataDir(): String = RUSTIC_SNAPSHOT_METADATA_DIR
+
     fun getRusticSnapshotsCacheFile(parent: String): String = "$parent/$RUSTIC_SNAPSHOTS_CACHE_FILE_NAME"
 
     fun getBackupNetworksConfigFilePath(parent: String): String =

@@ -56,7 +56,7 @@ class RusticBackupGateway {
     suspend fun createSnapshot(
         repositoryPath: String,
         password: String,
-        sourcePaths: List<String>,
+        sourcePaths: Map<String, String>,
         tags: List<String>,
         onProgress: (Long, Long, Float) -> Unit,
     ): String {

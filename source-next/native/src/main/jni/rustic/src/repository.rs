@@ -2,11 +2,13 @@ use rustic_backend::BackendOptions;
 use rustic_core::repofile::SnapshotFile;
 use rustic_core::{
     BackupOptions, CheckOptions, ConfigOptions, Credentials, KeyOptions, LocalDestination,
-    LsOptions, OpenStatus, PathList, Repository, RepositoryBackends, RepositoryOptions,
-    RestoreOptions, SnapshotOptions,
+    LsOptions, OpenStatus, Repository, RepositoryBackends, RepositoryOptions, RestoreOptions,
+    SnapshotOptions,
 };
 
 use crate::Result;
+use crate::mapped_source::{MappedSource, SourceMapping};
+
 use crate::progress::{AndroidProgressBars, RusticProgressCallback};
 
 /// Initializes a repository with the supplied password and default configuration.
@@ -44,7 +46,7 @@ pub fn validate_repository(repository_path: &str, password: &str) -> Result<()> 
 pub fn create_snapshot(
     repository_path: &str,
     password: &str,
-    source_paths: &[String],
+    source_paths: &[SourceMapping],
     tags: &[String],
 ) -> Result<String> {
     create_snapshot_from_repository(
@@ -60,7 +62,7 @@ pub fn create_snapshot(
 pub fn create_snapshot_with_progress<C: RusticProgressCallback>(
     repository_path: &str,
     password: &str,
-    source_paths: &[String],
+    source_paths: &[SourceMapping],
     tags: &[String],
     callback: C,
 ) -> Result<String> {
@@ -73,24 +75,21 @@ pub fn create_snapshot_with_progress<C: RusticProgressCallback>(
 
 fn create_snapshot_from_repository(
     repo: Repository<OpenStatus>,
-    source_paths: &[String],
+    source_paths: &[SourceMapping],
     tags: &[String],
 ) -> Result<String> {
     let repo = repo.to_indexed_ids()?;
-    let source = source_paths
-        .iter()
-        .map(std::path::PathBuf::from)
-        .collect::<PathList>()
-        .sanitize()?;
+    let source = MappedSource::new(source_paths)?;
     let snapshot_options = tags
         .iter()
         .try_fold(SnapshotOptions::default(), |options, tag| {
             options.add_tags(tag)
         })?;
-    let snapshot = repo.backup(
+    let snapshot = repo.archive(
         &BackupOptions::default(),
         &source,
         snapshot_options.to_snapshot()?,
+        &source.snapshot_paths(),
     )?;
 
     Ok(snapshot.id.to_string())

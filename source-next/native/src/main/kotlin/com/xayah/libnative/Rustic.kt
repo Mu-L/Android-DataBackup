@@ -18,11 +18,19 @@ object Rustic {
     fun createSnapshot(
         repositoryPath: String,
         password: String,
-        sourcePaths: List<String>,
+        sourcePaths: Map<String, String>,
         tags: List<String> = emptyList(),
         callback: Any? = null,
     ): String {
-        return nativeCreateSnapshot(repositoryPath, password, sourcePaths.toTypedArray(), tags.toTypedArray(), callback)
+        val paths = sourcePaths.toList()
+        return nativeCreateSnapshot(
+            repositoryPath = repositoryPath,
+            password = password,
+            sourcePaths = paths.map { it.first }.toTypedArray(),
+            snapshotPaths = paths.map { it.second }.toTypedArray(),
+            tags = tags.toTypedArray(),
+            callback = callback,
+        )
     }
 
     fun restoreSnapshot(repositoryPath: String, password: String, snapshotId: String, destinationPath: String) {
@@ -53,6 +61,7 @@ object Rustic {
         repositoryPath: String,
         password: String,
         sourcePaths: Array<String>,
+        snapshotPaths: Array<String>,
         tags: Array<String>,
         callback: Any?,
     ): String
