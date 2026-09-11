@@ -104,6 +104,7 @@ object PathHelper {
     fun getBackupMessagesMmsConfigFileRelativePath(): String = "$SUBDIR_MESSAGES/$MESSAGES_MMS_FILE_NAME"
     fun getRusticManifestFileRelativePath(): String = RUSTIC_MANIFEST_FILE_NAME
     fun getRusticSnapshotMetadataDir(): String = RUSTIC_SNAPSHOT_METADATA_DIR
+    fun getRusticSnapshotMetadataFilePath(relativePath: String): String = "$RUSTIC_SNAPSHOT_METADATA_DIR/$relativePath"
 
     fun getRusticSnapshotsCacheFile(parent: String): String = "$parent/$RUSTIC_SNAPSHOTS_CACHE_FILE_NAME"
 

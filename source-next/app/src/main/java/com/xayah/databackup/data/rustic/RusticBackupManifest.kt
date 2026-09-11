@@ -21,11 +21,15 @@ data class RusticAppManifest(
 /** Describes the DataBackup metadata and source inventory stored in a Rustic snapshot. */
 @JsonClass(generateAdapter = true)
 data class RusticBackupManifest(
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
     val configUuid: String,
     val createdAt: Long,
     val structuredFiles: List<String>,
     val apps: List<RusticAppManifest>,
     val included: List<RusticSourcePath>,
     val skipped: List<RusticSkippedSource>,
-)
+) {
+    companion object {
+        const val CURRENT_SCHEMA_VERSION = 1
+    }
+}
