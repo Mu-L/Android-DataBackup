@@ -545,4 +545,7 @@
     <string name="delete_snapshot_description">Usuń migawkę %1$s (%2$s)</string>
     <string name="confirm_delete_snapshot">Nie będzie już można przywrócić danych z tej migawki.</string>
     <string name="delete_snapshot_failed">Nie udało się usunąć migawki. Sprawdź dostęp do repozytorium i spróbuj ponownie.</string>
+    <string name="restore_snapshot">Przywróć migawkę</string>
+    <string name="restore_snapshot_description">Przywróć migawkę %1$s (%2$s)</string>
+    <string name="restore_snapshot_load_failed">Nie udało się wczytać migawki</string>
 </resources>
