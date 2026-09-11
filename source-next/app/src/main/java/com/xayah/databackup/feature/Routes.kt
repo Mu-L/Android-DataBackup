@@ -48,3 +48,24 @@ data object BackupCallLogsRoute : NavKey
 
 @Serializable
 data object BackupMessagesRoute : NavKey
+
+@Serializable
+data class RestoreRoute(val configUuid: String, val snapshotId: String) : NavKey
+
+@Serializable
+data object RestoreSetupRoute : NavKey
+
+@Serializable
+data object RestoreAppsRoute : NavKey
+
+@Serializable
+data object RestoreNetworksRoute : NavKey
+
+@Serializable
+data object RestoreContactsRoute : NavKey
+
+@Serializable
+data object RestoreCallLogsRoute : NavKey
+
+@Serializable
+data object RestoreMessagesRoute : NavKey

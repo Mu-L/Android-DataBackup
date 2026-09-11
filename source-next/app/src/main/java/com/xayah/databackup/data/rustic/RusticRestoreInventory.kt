@@ -38,7 +38,6 @@ data class RusticRestoreInventory(
 ) {
     fun ids(category: RestoreCategory): Set<String> = when (category) {
         RestoreCategory.Apps -> apps.keys
-        RestoreCategory.Files -> files.keys
         RestoreCategory.Networks -> networks.keys
         RestoreCategory.Contacts -> contacts.keys
         RestoreCategory.CallLogs -> callLogs.keys

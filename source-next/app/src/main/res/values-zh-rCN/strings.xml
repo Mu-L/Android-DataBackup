@@ -545,5 +545,7 @@
     <string name="delete_snapshot_description">删除快照 %1$s（%2$s）</string>
     <string name="confirm_delete_snapshot">删除后将无法从此快照恢复。</string>
     <string name="delete_snapshot_failed">无法删除快照，请检查仓库访问权限后重试。</string>
-    <string name="restore_snapshot_load_failed">无法读取此快照，请检查备份仓库后重试。</string>
+    <string name="restore_snapshot">恢复快照</string>
+    <string name="restore_snapshot_description">恢复快照 %1$s（%2$s）</string>
+    <string name="restore_snapshot_load_failed">无法加载快照</string>
 </resources>

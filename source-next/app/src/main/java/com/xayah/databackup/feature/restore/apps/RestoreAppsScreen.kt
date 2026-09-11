@@ -44,7 +44,6 @@ fun RestoreAppsScreen(navigator: Navigator, viewModel: AppsViewModel) {
         totalCount = apps.size,
         searchText = search,
         loading = state.loading,
-        failed = state.failed,
         onSearchTextChange = viewModel::changeSearchText,
         onBack = navigator::popBackStackSafely,
         itemSpacing = 0.dp,

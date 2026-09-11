@@ -7,13 +7,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -36,6 +43,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,7 +65,6 @@ internal fun <T> RestoreListScaffold(
     totalCount: Int,
     searchText: String,
     loading: Boolean,
-    failed: Boolean,
     onSearchTextChange: (String) -> Unit,
     onBack: () -> Unit,
     onSelectAll: (() -> Unit)? = null,
@@ -69,6 +76,7 @@ internal fun <T> RestoreListScaffold(
     tabs: @Composable () -> Unit = {},
     itemContent: @Composable (Modifier, T) -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
     var searching by remember { mutableStateOf(false) }
     val normalScroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val searchScroll = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -97,14 +105,20 @@ internal fun <T> RestoreListScaffold(
         }
     }
     Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(if (searching) searchScroll.nestedScrollConnection else normalScroll.nestedScrollConnection),
+        contentWindowInsets = WindowInsets.safeDrawing,
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(if (searching) searchScroll.nestedScrollConnection else normalScroll.nestedScrollConnection),
         topBar = {
             Column {
                 AnimatedContent(searching) { active ->
                     if (active) TopAppBar(
                         title = {
                             SearchTextField(
-                                modifier = Modifier.fillMaxWidth().padding(end = 8.dp).focusRequester(focus),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 8.dp)
+                                    .focusRequester(focus),
                                 value = searchText, onClose = ::closeSearch, onValueChange = onSearchTextChange,
                             )
                         },
@@ -134,15 +148,30 @@ internal fun <T> RestoreListScaffold(
         },
     ) { padding ->
         if (loading) {
-            LoadingIndicator(Modifier.padding(padding).padding(16.dp))
-        } else if (failed) {
-            Text(stringResource(R.string.restore_snapshot_load_failed), Modifier.padding(padding).padding(16.dp))
+            LoadingIndicator(
+                Modifier
+                    .padding(padding)
+                    .padding(16.dp)
+            )
         } else AnimatedContent(
             targetState = listKey to items,
             contentKey = { (key, entries) -> key to entries.isEmpty() },
-            modifier = Modifier.padding(top = padding.calculateTopPadding()),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = padding.calculateStartPadding(layoutDirection),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateEndPadding(layoutDirection),
+                )
+                .consumeWindowInsets(padding),
         ) { (_, entries) ->
-            if (entries.isEmpty()) Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (entries.isEmpty()) Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = padding.calculateBottomPadding()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Image(
                     ImageVector.vectorResource(R.drawable.img_empty), stringResource(R.string.it_is_empty),
                     modifier = Modifier.size(300.dp),
@@ -152,7 +181,10 @@ internal fun <T> RestoreListScaffold(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else LazyColumn(
-                modifier = Modifier.fillMaxSize().verticalFadingEdges(fading), state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalFadingEdges(fading),
+                state = listState,
                 contentPadding = PaddingValues(top = itemSpacing, bottom = padding.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(itemSpacing),
             ) {

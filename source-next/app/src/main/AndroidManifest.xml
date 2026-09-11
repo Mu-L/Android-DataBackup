@@ -54,6 +54,7 @@
 
         <activity
             android:name=".feature.MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:theme="@style/Theme.DataBackup.Starting">
             <intent-filter>

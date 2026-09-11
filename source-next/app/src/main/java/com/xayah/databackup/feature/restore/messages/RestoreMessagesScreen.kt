@@ -36,7 +36,6 @@ fun RestoreMessagesScreen(navigator: Navigator, viewModel: MessagesViewModel) {
         totalCount = items.size,
         searchText = search,
         loading = state.loading,
-        failed = state.failed,
         onSearchTextChange = viewModel::changeSearchText,
         onBack = navigator::popBackStackSafely,
         onSelectAll = viewModel::selectAllMessages,

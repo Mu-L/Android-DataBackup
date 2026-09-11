@@ -62,6 +62,7 @@ import com.xayah.databackup.data.rustic.RusticSnapshot
 import com.xayah.databackup.entity.BackupBackend
 import com.xayah.databackup.entity.BackupConfig
 import com.xayah.databackup.feature.BackupSetupRoute
+import com.xayah.databackup.feature.RestoreRoute
 import com.xayah.databackup.ui.component.DataBackupDialog
 import com.xayah.databackup.ui.component.DialogActionButton
 import com.xayah.databackup.ui.component.DialogDestructiveButton
@@ -234,7 +235,11 @@ fun BackupConfigScreen(
                     }
 
                     if (config.backupBackend is BackupBackend.Rustic) {
-                        backupSnapshotsItems(snapshots, deletingSnapshot) {
+                        backupSnapshotsItems(
+                            state = snapshots,
+                            isDeleting = deletingSnapshot,
+                            onRestore = { navigator.navigateSafely(RestoreRoute(config.uuidString, it.id)) },
+                        ) {
                             viewModel.clearSnapshotDeleteError()
                             selectedSnapshot = it
                         }
@@ -276,6 +281,7 @@ private fun BackupConfigContent(
 private fun LazyListScope.backupSnapshotsItems(
     state: BackupSnapshotsState,
     isDeleting: Boolean,
+    onRestore: (RusticSnapshot) -> Unit,
     onDelete: (RusticSnapshot) -> Unit,
 ) {
     val snapshots = state.snapshots.orEmpty()
@@ -340,6 +346,20 @@ private fun LazyListScope.backupSnapshotsItems(
                 )
             },
             slot = {
+                val restoreDescription = stringResource(R.string.restore_snapshot)
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+                    tooltip = { PlainTooltip { Text(restoreDescription) } },
+                    state = rememberTooltipState(),
+                ) {
+                    IconButton(onClick = { onRestore(snapshot) }, enabled = !isDeleting && !state.isLoading) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_archive_restore),
+                            contentDescription = stringResource(R.string.restore_snapshot_description, timestamp, snapshot.id.take(8)),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
                 val description = stringResource(R.string.delete_snapshot)
                 TooltipBox(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),

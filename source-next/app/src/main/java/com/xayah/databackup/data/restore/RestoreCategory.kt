@@ -3,7 +3,7 @@ package com.xayah.databackup.data.restore
 import com.xayah.databackup.data.rustic.RusticSourceCategory
 import com.xayah.databackup.database.entity.Option
 
-enum class RestoreCategory { Apps, Files, Networks, Contacts, CallLogs, Messages }
+enum class RestoreCategory { Apps, Networks, Contacts, CallLogs, Messages }
 
 val AppRestoreParts = setOf(
     RusticSourceCategory.Apk,

@@ -16,6 +16,7 @@ import com.xayah.databackup.data.GitHubReleaseRepository
 import com.xayah.databackup.data.MessageRepository
 import com.xayah.databackup.data.NetworkRepository
 import com.xayah.databackup.data.TranslatorRepository
+import com.xayah.databackup.data.restore.RestoreRepository
 import com.xayah.databackup.data.rustic.RusticAppSourcePlanner
 import com.xayah.databackup.data.rustic.RusticBackupCoordinator
 import com.xayah.databackup.data.rustic.RusticBackupGateway
@@ -35,6 +36,8 @@ import com.xayah.databackup.feature.backup.messages.MessagesViewModel
 import com.xayah.databackup.feature.backup.networks.NetworksViewModel
 import com.xayah.databackup.feature.backup.rustic.RusticBackupProcessViewModel
 import com.xayah.databackup.feature.dashboard.DashboardViewModel
+import com.xayah.databackup.feature.restore.RestoreSetupViewModel
+import com.xayah.databackup.feature.restore.RestoreViewModel
 import com.xayah.databackup.feature.update.UpdatesViewModel
 import com.xayah.databackup.service.util.BackupAppsHelper
 import com.xayah.databackup.service.util.BackupCallLogsHelper
@@ -48,8 +51,12 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
-import org.koin.dsl.bind
 import org.koin.dsl.module
+import com.xayah.databackup.feature.restore.apps.AppsViewModel as RestoreAppsViewModel
+import com.xayah.databackup.feature.restore.call_logs.CallLogsViewModel as RestoreCallLogsViewModel
+import com.xayah.databackup.feature.restore.contacts.ContactsViewModel as RestoreContactsViewModel
+import com.xayah.databackup.feature.restore.messages.MessagesViewModel as RestoreMessagesViewModel
+import com.xayah.databackup.feature.restore.networks.NetworksViewModel as RestoreNetworksViewModel
 
 class App : Application(), SingletonImageLoader.Factory {
     companion object {
@@ -57,21 +64,22 @@ class App : Application(), SingletonImageLoader.Factory {
     }
 
     private val appModule = module {
-        singleOf(::BackupConfigRepository) bind BackupConfigRepository::class
-        singleOf(::AppRepository) bind AppRepository::class
-        singleOf(::FileRepository) bind FileRepository::class
-        singleOf(::NetworkRepository) bind NetworkRepository::class
-        singleOf(::ContactRepository) bind ContactRepository::class
-        singleOf(::CallLogRepository) bind CallLogRepository::class
-        singleOf(::MessageRepository) bind MessageRepository::class
-        singleOf(::BackupProcessRepository) bind BackupProcessRepository::class
-        singleOf(::GitHubReleaseRepository) bind GitHubReleaseRepository::class
-        singleOf(::TranslatorRepository) bind TranslatorRepository::class
-        singleOf(::BackupAppsHelper) bind BackupAppsHelper::class
-        singleOf(::BackupNetworksHelper) bind BackupNetworksHelper::class
-        singleOf(::BackupContactsHelper) bind BackupContactsHelper::class
-        singleOf(::BackupCallLogsHelper) bind BackupCallLogsHelper::class
-        singleOf(::BackupMessagesHelper) bind BackupMessagesHelper::class
+        singleOf(::RestoreRepository)
+        singleOf(::BackupConfigRepository)
+        singleOf(::AppRepository)
+        singleOf(::FileRepository)
+        singleOf(::NetworkRepository)
+        singleOf(::ContactRepository)
+        singleOf(::CallLogRepository)
+        singleOf(::MessageRepository)
+        singleOf(::BackupProcessRepository)
+        singleOf(::GitHubReleaseRepository)
+        singleOf(::TranslatorRepository)
+        singleOf(::BackupAppsHelper)
+        singleOf(::BackupNetworksHelper)
+        singleOf(::BackupContactsHelper)
+        singleOf(::BackupCallLogsHelper)
+        singleOf(::BackupMessagesHelper)
         singleOf(::RusticAppSourcePlanner)
         singleOf(::RusticStructuredDataSerializer)
         singleOf(::RusticBackupGateway)
@@ -86,6 +94,13 @@ class App : Application(), SingletonImageLoader.Factory {
         viewModelOf(::BackupProcessViewModel)
         viewModelOf(::RusticBackupProcessViewModel)
         viewModelOf(::BackupConfigViewModel)
+        viewModelOf(::RestoreViewModel)
+        viewModelOf(::RestoreAppsViewModel)
+        viewModelOf(::RestoreNetworksViewModel)
+        viewModelOf(::RestoreContactsViewModel)
+        viewModelOf(::RestoreCallLogsViewModel)
+        viewModelOf(::RestoreMessagesViewModel)
+        viewModelOf(::RestoreSetupViewModel)
         viewModelOf(::AppsViewModel)
         viewModelOf(::NetworksViewModel)
         viewModelOf(::ContactsViewModel)

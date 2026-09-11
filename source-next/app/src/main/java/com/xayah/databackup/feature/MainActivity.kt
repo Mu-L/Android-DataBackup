@@ -39,6 +39,8 @@ import com.xayah.databackup.feature.backup.contacts.BackupContactsScreen
 import com.xayah.databackup.feature.backup.messages.BackupMessagesScreen
 import com.xayah.databackup.feature.backup.networks.BackupNetworksScreen
 import com.xayah.databackup.feature.backup.rustic.RusticBackupProcessScreen
+import com.xayah.databackup.feature.restore.RestoreNavigationHost
+import com.xayah.databackup.feature.restore.RestoreViewModel
 import com.xayah.databackup.feature.setup.NoPermKey
 import com.xayah.databackup.feature.setup.SetupActivity
 import com.xayah.databackup.feature.update.UpdatesScreen
@@ -202,6 +204,11 @@ class MainActivity : ComponentActivity() {
                                     parametersOf(route)
                                 }
                                 BackupConfigScreen(navigator, viewModel)
+                            }
+
+                            entry<RestoreRoute> { route ->
+                                val viewModel = koinViewModel<RestoreViewModel> { parametersOf(route) }
+                                RestoreNavigationHost(navigator, viewModel)
                             }
 
                             entry<BackupAppsRoute> {

@@ -23,6 +23,7 @@ fun InlineNotice(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.errorContainer.copy(alpha = CONTAINER_ALPHA),
     contentColor: Color = MaterialTheme.colorScheme.error,
+    action: (@Composable () -> Unit)? = null,
     supportingContent: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     Surface(
@@ -54,6 +55,7 @@ fun InlineNotice(
                     supportingContent()
                 }
             }
+            action?.invoke()
         }
     }
 }
